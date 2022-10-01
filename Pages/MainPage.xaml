@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
+	xmlns:local="clr-namespace:BouncyBall"
+	xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+	x:Class="BouncyBall.MainPage">
+		<AbsoluteLayout x:Name="layout">
+			<Frame x:Name="ball"
+				   Background="Red" 
+				   WidthRequest="25"
+				   HeightRequest="25" 
+				   CornerRadius="50" />
+		</AbsoluteLayout>
+</ContentPage>
