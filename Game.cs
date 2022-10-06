@@ -21,11 +21,15 @@ namespace BouncyBall
     	
     	private int tick;
     	
+    	private CollisionDetector detector;
+    	
     	public bool IsStarted { get; private set; }
     	
     	public double BaseLine { get; private set; }
     	
     	public Entity Ball { get; }
+    	
+    	public Entity Collision { get; private set; }
     	
     	public List<Entity> Obstacles { get; }
     	
@@ -37,6 +41,7 @@ namespace BouncyBall
     	{
     		Obstacles = new List<Entity>();
         	Ball = new Entity(0, -BallSize, BallSize, BallSize);
+        	detector = new CollisionDetector();
     	}
     	
         public void Initialize(double width, double height)
@@ -46,6 +51,7 @@ namespace BouncyBall
         	rng = new Random();
         	
         	GenerateObstacles();
+        	Ball.MoveTo(width / 2, height / 2);
         	
         	IsStarted = true;
         }
@@ -77,15 +83,51 @@ namespace BouncyBall
         	return new Entity(x, y, width, BlockSize);
         }
         
+        public void Interact(double dx, double dy)
+        {
+        	Console.WriteLine(dx);
+        	Ball.Accelerate(dx / 10.0f, 20.0f);
+        }
+        
         public void Update()
         {
 			MoveBall();
         	tick++;
-        	BaseLine += 1.0;
         	
+        	double topLine = BaseLine + bounds.Item2 - 50;
+        	BaseLine += (Ball.Y > topLine && Ball.Jumping)
+        		? Ball.Velocity.Y
+        		: 1.0;;
+        	
+        	MoveObstacles();
+        	Collision = detector.CheckCollidesAny(Ball, Obstacles);
+        	
+        	if((Collision != null) && !Ball.Jumping)
+        	{
+        		Ball.MoveOnEntity(Collision);
+        	}
+        }
+        
+        private void MoveBall()
+        {
+			if(Collision == null)
+			{
+				double friction = -Math.Sign(Ball.Velocity.X) * 0.2;
+				Ball.Accelerate(friction, -1.0);
+			}
+			else if(!Ball.Jumping)
+			{
+				Ball.Stop();
+			}
+			
+			Ball.Move();
+        }
+        
+        private void MoveObstacles()
+        {
         	foreach(var block in Obstacles)
         	{
-        		if(block.Y < BaseLine)
+        		if(block.Y + block.Height < BaseLine)
         		{
         			ObjectRemoved?.Invoke(this, block);
         			Obstacles.Remove(block);
@@ -95,19 +137,6 @@ namespace BouncyBall
         			ObjectCreated?.Invoke(this, randomObstacle);
         		}
         	}
-        }
-        
-        private void MoveBall()
-        {
-        	var (w, h) = bounds;
-        	double hw = w / 2;
-			double hh = h / 2;
-			
-			double t = tick / 10.0;
-			double x = Math.Cos(t * 0.5) * 200 + hw;
-			double y = Math.Sin(t) * 200 + hh;
-			
-			Ball.MoveTo(x, y);
         }
     }
 }

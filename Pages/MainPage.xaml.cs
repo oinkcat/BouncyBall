@@ -16,6 +16,10 @@ namespace BouncyBall
 		
 		private Dictionary<Entity, Frame> entityBlocks;
 		
+		private (double, double)? touchCoords;
+		
+		private (double, double)? moveCoords;
+		
 		public MainPage(Game game)
 		{
 			this.game = game;
@@ -35,6 +39,38 @@ namespace BouncyBall
 					Dispatcher.BeginInvokeOnMainThread(() => SpawnBlocks(game.Obstacles));
 				}
 			};
+			
+			var touchArea = new TouchView();
+			touchArea.TouchStart += TouchStarted;
+			touchArea.TouchMove += TouchMoved;
+			touchArea.TouchEnd += TouchCompleted;
+			
+			layout.Children.Add(touchArea);
+		}
+		
+		private void TouchStarted(object sender, (double, double) coords)
+		{
+			touchCoords = coords;
+			moveCoords = touchCoords;
+			
+			var (tx, ty) = touchCoords.Value;
+			Console.WriteLine($"{tx}, {ty}");
+		}
+		
+		private void TouchMoved(object sender, (double, double) coords)
+		{
+			moveCoords = coords;
+		}
+		
+		private void TouchCompleted(object sender, EventArgs e)
+		{
+			if(touchCoords.HasValue)
+			{
+				var (tx, ty) = touchCoords.Value;
+				var (mx, my) = moveCoords.Value;
+				game.Interact(tx - mx, ty - my);
+				touchCoords = null;
+			}
 		}
 		
 		private void HandleNewObject(object sender, Entity newObject)
@@ -73,7 +109,7 @@ namespace BouncyBall
 				var blockFrame = new Frame();
 				blockFrame.BackgroundColor = Color.Blue;
 				blockFrame.BorderColor = Color.Black;
-				layout.Children.Add(blockFrame);
+				layout.Children.Insert(0, blockFrame);
 				PlaceBlock(newBlock, blockFrame);
 				entityBlocks.Add(newBlock, blockFrame);
 			}
@@ -83,10 +119,10 @@ namespace BouncyBall
 		
 		private void PlaceBlock(Entity block, Frame frame)
 		{
-			double blockY = Height - (block.Y - game.BaseLine);
+			double blockY = Height - block.Y - block.Height;
 			AbsoluteLayout.SetLayoutBounds(frame, new Rectangle {
 				X = block.X,
-				Y = blockY,
+				Y = blockY + game.BaseLine,
 				Width = block.Width,
 				Height = block.Height
 			});
@@ -97,14 +133,12 @@ namespace BouncyBall
 			foreach(var (block, frame) in entityBlocks)
 			{
 				PlaceBlock(block, frame);
+				frame.BackgroundColor = (block == game.Collision)
+					? Color.Green
+					: Color.Blue;
 			}
 			
-			AbsoluteLayout.SetLayoutBounds(ball, new Rectangle {
-				X = game.Ball.X,
-				Y = Height - game.Ball.Y,
-				Width = game.Ball.Width,
-				Height = game.Ball.Height
-			});
+			PlaceBlock(game.Ball, ball);
 		}
 	}
 }
