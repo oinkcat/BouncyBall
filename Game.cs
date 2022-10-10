@@ -29,7 +29,7 @@ namespace BouncyBall
     	
     	public Entity Ball { get; }
     	
-    	public Entity Collision { get; private set; }
+    	public Entity Stand { get; private set; }
     	
     	public List<Entity> Obstacles { get; }
     	
@@ -41,7 +41,6 @@ namespace BouncyBall
     	{
     		Obstacles = new List<Entity>();
         	Ball = new Entity(0, -BallSize, BallSize, BallSize);
-        	detector = new CollisionDetector();
     	}
     	
         public void Initialize(double width, double height)
@@ -49,6 +48,7 @@ namespace BouncyBall
         	bounds = (width, height);
         	rowCount = (int)(height / BlockSize);
         	rng = new Random();
+        	detector = new CollisionDetector(width);
         	
         	GenerateObstacles();
         	Ball.MoveTo(width / 2, height / 2);
@@ -85,8 +85,8 @@ namespace BouncyBall
         
         public void Interact(double dx, double dy)
         {
-        	Console.WriteLine(dx);
-        	Ball.Accelerate(dx / 10.0f, 20.0f);
+        	Stand = null;
+        	Ball.Accelerate(dx / 10.0f, 15.0f);
         }
         
         public void Update()
@@ -97,20 +97,34 @@ namespace BouncyBall
         	double topLine = BaseLine + bounds.Item2 - 50;
         	BaseLine += (Ball.Y > topLine && Ball.Jumping)
         		? Ball.Velocity.Y
-        		: 1.0;;
+        		: 1.0;
         	
         	MoveObstacles();
-        	Collision = detector.CheckCollidesAny(Ball, Obstacles);
         	
-        	if((Collision != null) && !Ball.Jumping)
+        	var collision = detector.CheckCollision(Ball, Obstacles);
+			
+        	if(collision != null)
         	{
-        		Ball.MoveOnEntity(Collision);
+        		if(collision.IsSide)
+        		{
+        			Ball.Accelerate(-Ball.Velocity.X * 2, 0.0);
+        		}
+        		else if(collision.Side == CollisionSide.Bottom)
+        		{
+        			Ball.Accelerate(0.0, -Ball.Velocity.Y * 2);
+        		}
+        		else if(collision.Side == CollisionSide.Top)
+        		{
+        			Stand = collision.Block;
+        			Ball.Stop();
+        			Ball.MoveOnEntity(Stand);
+        		}
         	}
         }
         
         private void MoveBall()
         {
-			if(Collision == null)
+			if(Stand == null)
 			{
 				double friction = -Math.Sign(Ball.Velocity.X) * 0.2;
 				Ball.Accelerate(friction, -1.0);

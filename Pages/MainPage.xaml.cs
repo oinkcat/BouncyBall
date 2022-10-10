@@ -30,13 +30,15 @@ namespace BouncyBall
 			entityBlocks = new Dictionary<Entity, Frame>();
 			
 			InitializeComponent();
-			StartBall();
 			
 			this.SizeChanged += (s, e) => {
 				if(!game.IsStarted)
 				{
 					game.Initialize(Width, Height);
-					Dispatcher.BeginInvokeOnMainThread(() => SpawnBlocks(game.Obstacles));
+					Dispatcher.BeginInvokeOnMainThread(() => {
+						SpawnBlocks(game.Obstacles);
+						StartBall();
+					});
 				}
 			};
 			
@@ -52,9 +54,6 @@ namespace BouncyBall
 		{
 			touchCoords = coords;
 			moveCoords = touchCoords;
-			
-			var (tx, ty) = touchCoords.Value;
-			Console.WriteLine($"{tx}, {ty}");
 		}
 		
 		private void TouchMoved(object sender, (double, double) coords)
@@ -133,7 +132,7 @@ namespace BouncyBall
 			foreach(var (block, frame) in entityBlocks)
 			{
 				PlaceBlock(block, frame);
-				frame.BackgroundColor = (block == game.Collision)
+				frame.BackgroundColor = (block == game.Stand)
 					? Color.Green
 					: Color.Blue;
 			}

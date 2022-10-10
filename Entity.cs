@@ -55,7 +55,7 @@ namespace BouncyBall
         	var newVelocity = Velocity + new Vector2((float)ax, (float)ay);
         	
         	float vx = Math.Clamp(newVelocity.X, -MaxVelocity, MaxVelocity);
-        	float vy = Math.Clamp(newVelocity.Y, -MaxVelocity, MaxVelocity);
+        	float vy = Math.Clamp(newVelocity.Y, -MaxVelocity, MaxVelocity * 2);
         	Velocity = new Vector2(vx, vy);
         }
         
