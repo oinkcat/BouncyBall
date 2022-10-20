@@ -12,6 +12,8 @@ namespace BouncyBall
     	private const int BlockSize = 60;
     	
 		private const int BallSize = 30;
+		
+		private const int BlocksInterval = 150;
     	
     	private (double, double) bounds;
     	
@@ -21,11 +23,15 @@ namespace BouncyBall
     	
     	private int tick;
     	
+    	private double topBlockYPos;
+    	
     	private CollisionDetector detector;
     	
     	public bool IsStarted { get; private set; }
     	
     	public double BaseLine { get; private set; }
+    	
+    	public int Score { get; private set; }
     	
     	public Entity Ball { get; }
     	
@@ -58,29 +64,48 @@ namespace BouncyBall
         
         private void GenerateObstacles()
         {
-        	const int NumObstaclesMin = 5;
-        	const int NumObstaclesMax = 10;
+        	const int InitialHeight = 400;
         	
-        	var numObstacles = rng.Next(NumObstaclesMin, NumObstaclesMax);
-        	
-        	for(int i = 0; i < numObstacles; i++)
+        	for(;topBlockYPos < InitialHeight; topBlockYPos += BlocksInterval)
         	{
-        		Obstacles.Add(CreateObstacle());
+        		var obstaclesRow = CreateObstacleRow(topBlockYPos);
+        		Obstacles.AddRange(obstaclesRow);
         	}
         }
         
-        private Entity CreateObstacle(bool onTop = false)
+        private List<Entity> CreateObstacleRow(double yPos)
         {
-        	var (maxX, maxY) = bounds;
+        	const int MaxOneSize = 3;
+        	const int Margin = BallSize;
         	
-        	double x = rng.NextDouble() * maxX;
+        	int fullSize = (int)bounds.Item1 / (BlockSize + Margin) + 1;
+        	var createdEntities = new List<Entity>();
+        	bool hasGap = false;
         	
-        	double y = onTop
-        		? maxY + BaseLine + BlockSize
-        		: rng.Next(rowCount) * BlockSize;
+        	for(int size = 0; size < fullSize;)
+        	{
+        		int oneSize = rng.Next(1, MaxOneSize);
+        		
+        		if(rng.NextDouble() > 0.33)
+        		{
+        			double xPos = size * (BlockSize + Margin);
+        			var newEntity = new Entity(xPos, yPos, BlockSize * oneSize, BlockSize);
+        			createdEntities.Add(newEntity);
+        		}
+        		else
+        		{
+        			hasGap = true;
+        		}
+        		
+        		size += oneSize;
+        	}
         	
-        	double width = (rng.NextDouble() * 3 + 1) * BlockSize;
-        	return new Entity(x, y, width, BlockSize);
+        	if(!hasGap)
+        	{
+        		createdEntities.RemoveAt(rng.Next(createdEntities.Count));
+        	}
+        	
+        	return createdEntities;
         }
         
         public void Interact(double dx, double dy)
@@ -91,33 +116,40 @@ namespace BouncyBall
         
         public void Update()
         {
-			MoveBall();
         	tick++;
         	
-        	double topLine = BaseLine + bounds.Item2 - 50;
-        	BaseLine += (Ball.Y > topLine && Ball.Jumping)
-        		? Ball.Velocity.Y
-        		: 1.0;
-        	
+        	RaiseBaseLine();
         	MoveObstacles();
+        	MoveBall();
         	
-        	var collision = detector.CheckCollision(Ball, Obstacles);
-			
-        	if(collision != null)
+        	HandleCollisions();
+        }
+        
+        private void RaiseBaseLine()
+        {
+        	const int JumpOffset = 200;
+        	
+        	double topLine = BaseLine + bounds.Item2;
+        	double jumpLine = topLine - JumpOffset;
+        	
+        	bool needRaise = Ball.Y > jumpLine && Ball.Jumping;
+       
+        	BaseLine += needRaise ? Ball.Velocity.Y : 1.0;
+        	
+        	if(needRaise)
         	{
-        		if(collision.IsSide)
+        		Score++;
+        	}
+        	
+        	if(topLine - topBlockYPos > BlocksInterval)
+        	{
+        		topBlockYPos = topLine;
+        		var newRow = CreateObstacleRow(topLine);
+        		Obstacles.AddRange(newRow);
+        		
+        		foreach(var newBlock in newRow)
         		{
-        			Ball.Accelerate(-Ball.Velocity.X * 2, 0.0);
-        		}
-        		else if(collision.Side == CollisionSide.Bottom)
-        		{
-        			Ball.Accelerate(0.0, -Ball.Velocity.Y * 2);
-        		}
-        		else if(collision.Side == CollisionSide.Top)
-        		{
-        			Stand = collision.Block;
-        			Ball.Stop();
-        			Ball.MoveOnEntity(Stand);
+        			ObjectCreated?.Invoke(this, newBlock);
         		}
         	}
         }
@@ -143,12 +175,42 @@ namespace BouncyBall
         	{
         		if(block.Y + block.Height < BaseLine)
         		{
-        			ObjectRemoved?.Invoke(this, block);
         			Obstacles.Remove(block);
-        			
-        			var randomObstacle = CreateObstacle(true);
-        			Obstacles.Add(randomObstacle);
-        			ObjectCreated?.Invoke(this, randomObstacle);
+        			ObjectRemoved?.Invoke(this, block);
+        		}
+        	}
+        }
+        
+        private void HandleCollisions()
+        {
+        	var collision = detector.CheckCollision(Ball, Obstacles);
+			
+        	if(collision != null)
+        	{
+        		if(collision.Block != null)
+        		{
+        			Ball.MoveOnEntity(collision.Block, collision.Side);
+        		}
+        		else
+        		{
+        			double xBySide = (collision.Side == CollisionSide.Left)
+        				? bounds.Item1 - Ball.Width
+        				: 0;
+        			Ball.MoveTo(xBySide, Ball.Y);
+        		}
+        		
+        		if(collision.IsSide)
+        		{
+        			Ball.Accelerate(-Ball.Velocity.X * 2, 0.0);
+        		}
+        		else if(collision.Side == CollisionSide.Bottom)
+        		{
+        			Ball.Accelerate(0.0, -Ball.Velocity.Y * 2);
+        		}
+        		else if(collision.Side == CollisionSide.Top)
+        		{
+        			Stand = collision.Block;
+        			Ball.Stop();
         		}
         	}
         }

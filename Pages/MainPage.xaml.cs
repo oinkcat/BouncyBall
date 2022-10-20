@@ -16,6 +16,10 @@ namespace BouncyBall
 		
 		private Dictionary<Entity, Frame> entityBlocks;
 		
+		private List<Entity> createdBlocks;
+		
+		private List<Entity> removedBlocks;
+		
 		private (double, double)? touchCoords;
 		
 		private (double, double)? moveCoords;
@@ -28,6 +32,8 @@ namespace BouncyBall
 			game.ObjectRemoved += HandleRemovedObject;
 			
 			entityBlocks = new Dictionary<Entity, Frame>();
+			createdBlocks = new List<Entity>();
+			removedBlocks = new List<Entity>();
 			
 			InitializeComponent();
 			
@@ -74,16 +80,12 @@ namespace BouncyBall
 		
 		private void HandleNewObject(object sender, Entity newObject)
 		{
-			Dispatcher.BeginInvokeOnMainThread(() => {
-				SpawnBlocks(new [] { newObject });
-			});
+			createdBlocks.Add(newObject);
 		}
 		
 		private void HandleRemovedObject(object sender, Entity removedObject)
 		{
-			var blockFrame = entityBlocks[removedObject];
-			Dispatcher.BeginInvokeOnMainThread(() => layout.Children.Remove(blockFrame));
-			entityBlocks.Remove(removedObject);
+			removedBlocks.Add(removedObject);
 		}
 		
 		private void StartBall()
@@ -98,7 +100,11 @@ namespace BouncyBall
 		private void UpdateState(object sender, EventArgs e)
 		{
 			game.Update();
-			Dispatcher.BeginInvokeOnMainThread(MoveObjects);
+			Dispatcher.BeginInvokeOnMainThread(() =>  {
+				MoveObjects();
+				HandleCreatedAndRemovedBlocks();
+				DisplayScore();
+			});
 		}
 		
 		private void SpawnBlocks(IList<Entity> blocks)
@@ -113,7 +119,7 @@ namespace BouncyBall
 				entityBlocks.Add(newBlock, blockFrame);
 			}
 			
-			layout.RaiseChild(ball);
+			// layout.RaiseChild(ball);
 		}
 		
 		private void PlaceBlock(Entity block, Frame frame)
@@ -138,6 +144,36 @@ namespace BouncyBall
 			}
 			
 			PlaceBlock(game.Ball, ball);
+		}
+		
+		private void HandleCreatedAndRemovedBlocks()
+		{
+			layout.BatchBegin();
+			
+			// Place new blocks
+			if(createdBlocks.Count > 0)
+			{
+				SpawnBlocks(createdBlocks);
+				createdBlocks.Clear();
+			}
+			
+			// Remove blocks
+			if(removedBlocks.Count < 20) { return; }
+			
+			foreach(var removedBlock in removedBlocks)
+			{
+				var blockFrame = entityBlocks[removedBlock];
+				layout.Children.Remove(blockFrame);
+				entityBlocks.Remove(removedBlock);
+			}
+			
+			removedBlocks.Clear();
+			layout.BatchCommit();
+		}
+		
+		private void DisplayScore()
+		{
+			ScoreLabel.Text = game.Score.ToString().PadLeft(5, '0');
 		}
 	}
 }

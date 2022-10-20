@@ -44,10 +44,21 @@ namespace BouncyBall
         	Position += new Vector2((float)dx, (float)dy);
         }
         
-        public void MoveOnEntity(Entity another)
+        public void MoveOnEntity(Entity another, CollisionSide side = CollisionSide.Top)
         {
-        	float newY = (float)another.Y + another.Height;
-        	Position = new Vector2((float)X, newY);
+        	float newX = side switch {
+        		CollisionSide.Left => (float)another.X - Width,
+        		CollisionSide.Right => (float)another.X + another.Width,
+        		_ => Position.X
+        	};
+        	
+        	float newY = side switch {
+        		CollisionSide.Top => (float)another.Y + another.Height,
+        		CollisionSide.Bottom => (float)another.Y - Height,
+        		_ => Position.Y
+        	};
+        	
+        	Position = new Vector2(newX, newY);
         }
         
         public void Accelerate(double ax, double ay)

@@ -4,6 +4,12 @@
 	xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
 	x:Class="BouncyBall.MainPage">
 		<AbsoluteLayout x:Name="layout">
+			<Label x:Name="ScoreLabel"
+				   HorizontalOptions="End"
+				   VerticalOptions="Start"
+				   Margin="4"
+				   Text="00000" />
+				   
 			<Frame x:Name="ball"
 				   Background="Red" 
 				   WidthRequest="25"

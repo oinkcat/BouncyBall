@@ -47,11 +47,11 @@ namespace BouncyBall
         {
         	var collision = new Collision { Block = another };
         	
-        	if(one.X + one.Width > another.X)
+        	if((one.Velocity.X > 0.0) && (one.X + one.Width > another.X))
         	{
         		collision.Side = CollisionSide.Left;
         	}
-        	else if(one.X < another.X + another.Width)
+        	else if((one.Velocity.X < 0.0) && (one.X < another.X + another.Width))
         	{
         		collision.Side = CollisionSide.Right;
         	}
