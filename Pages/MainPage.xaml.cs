@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Collections.Generic;
 using System.Timers;
 using Xamarin.Forms;
@@ -20,6 +21,8 @@ namespace BouncyBall
 		
 		private List<Entity> removedBlocks;
 		
+		private ImageSource brickImage;
+		
 		private (double, double)? touchCoords;
 		
 		private (double, double)? moveCoords;
@@ -30,6 +33,9 @@ namespace BouncyBall
 			
 			game.ObjectCreated += HandleNewObject;
 			game.ObjectRemoved += HandleRemovedObject;
+			game.GameOver += HandleGameOver;
+			
+			brickImage = ImageSource.FromResource("BouncyBall.resources.brick.png");
 			
 			entityBlocks = new Dictionary<Entity, Frame>();
 			createdBlocks = new List<Entity>();
@@ -41,10 +47,7 @@ namespace BouncyBall
 				if(!game.IsStarted)
 				{
 					game.Initialize(Width, Height);
-					Dispatcher.BeginInvokeOnMainThread(() => {
-						SpawnBlocks(game.Obstacles);
-						StartBall();
-					});
+					Dispatcher.BeginInvokeOnMainThread(ReStartGame);
 				}
 			};
 			
@@ -52,9 +55,31 @@ namespace BouncyBall
 			touchArea.TouchStart += TouchStarted;
 			touchArea.TouchMove += TouchMoved;
 			touchArea.TouchEnd += TouchCompleted;
-			
 			layout.Children.Add(touchArea);
+			
+			ballImage.Source = ImageSource.FromResource("BouncyBall.resources.ball.png");
 		}
+		
+		private void ReStartGame()
+		{
+			entityBlocks.Clear();
+			createdBlocks.Clear();
+			removedBlocks.Clear();
+			
+			var blocksToRemove = layout.Children
+				.OfType<Frame>()
+				.Where(b => b != ball)
+				.ToArray();
+				
+			foreach(var view in blocksToRemove)
+			{
+				layout.Children.Remove(view);
+			}
+			
+			SpawnBlocks(game.Obstacles);
+			StartBall();
+		}
+		
 		
 		private void TouchStarted(object sender, (double, double) coords)
 		{
@@ -112,15 +137,27 @@ namespace BouncyBall
 			foreach(var newBlock in blocks)
 			{
 				var blockFrame = new Frame();
-				blockFrame.BackgroundColor = Color.Blue;
+				blockFrame.BackgroundColor = GetBlockColor(newBlock);
 				blockFrame.BorderColor = Color.Black;
+				blockFrame.Padding = new Thickness(1);
+				blockFrame.Content = new Image()
+				{
+					Aspect = Aspect.Fill,
+					Source = brickImage
+				};
 				layout.Children.Insert(0, blockFrame);
 				PlaceBlock(newBlock, blockFrame);
 				entityBlocks.Add(newBlock, blockFrame);
 			}
 			
-			// layout.RaiseChild(ball);
+			layout.RaiseChild(ball);
 		}
+		
+		private Color GetBlockColor(Entity block) => block switch
+		{
+			MovingBlock => Color.Purple,
+			_ => Color.Blue
+		};
 		
 		private void PlaceBlock(Entity block, Frame frame)
 		{
@@ -140,7 +177,7 @@ namespace BouncyBall
 				PlaceBlock(block, frame);
 				frame.BackgroundColor = (block == game.Stand)
 					? Color.Green
-					: Color.Blue;
+					: GetBlockColor(block);
 			}
 			
 			PlaceBlock(game.Ball, ball);
@@ -174,6 +211,19 @@ namespace BouncyBall
 		private void DisplayScore()
 		{
 			ScoreLabel.Text = game.Score.ToString().PadLeft(5, '0');
+		}
+		
+		private void HandleGameOver(object sender, EventArgs e)
+		{
+			Dispatcher.BeginInvokeOnMainThread(async () =>
+			{
+				moveTimer.Stop();
+				string msg = $"Your final score: {game.Score}";
+				await DisplayAlert("Game Over", msg, "OK");
+				
+				game.Initialize(Width, Height);
+				ReStartGame();
+			});
 		}
 	}
 }

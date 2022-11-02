@@ -5,11 +5,13 @@ using System.Collections.Generic;
 namespace BouncyBall
 {
 	/// <summary>
-	/// Game entity
+	/// Base game entity
 	/// </summary>
-    public class Entity 
+    public abstract class Entity 
     {
     	private const float MaxVelocity = 10;
+    	
+    	public Collision Bump { get; set; }
     	
         public Vector2 Position { get; private set; }
         
@@ -79,5 +81,7 @@ namespace BouncyBall
         {
         	Velocity = new Vector2(0.0f);
         }
+        
+        public abstract void Update();
     }
 }

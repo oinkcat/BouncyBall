@@ -14,16 +14,20 @@ namespace BouncyBall
 		private const int BallSize = 30;
 		
 		private const int BlocksInterval = 150;
+		
+		private readonly static List<Entity> none = new List<Entity>();
     	
     	private (double, double) bounds;
     	
     	private int rowCount;
     	
-    	private Random rng;
+    	private readonly Random rng;
     	
     	private int tick;
     	
     	private double topBlockYPos;
+    	
+    	private HashSet<MovingBlock> movableBlocks;
     	
     	private CollisionDetector detector;
     	
@@ -39,21 +43,31 @@ namespace BouncyBall
     	
     	public List<Entity> Obstacles { get; }
     	
-    	public EventHandler<Entity> ObjectCreated;
+    	public event EventHandler<Entity> ObjectCreated;
     	
-    	public EventHandler<Entity> ObjectRemoved;
+    	public event EventHandler<Entity> ObjectRemoved;
+    	
+    	public event EventHandler GameOver;
     	
     	public Game()
     	{
+    		rng = new Random();
     		Obstacles = new List<Entity>();
-        	Ball = new Entity(0, -BallSize, BallSize, BallSize);
+    		movableBlocks = new HashSet<MovingBlock>();
+        	Ball = new PlayerBall(0, BallSize);
     	}
     	
         public void Initialize(double width, double height)
         {
+        	Obstacles.Clear();
+        	movableBlocks.Clear();
+        	Stand = null;
+        	Score = 0;
+        	BaseLine = 0;
+        	topBlockYPos = 0;
+        	
         	bounds = (width, height);
         	rowCount = (int)(height / BlockSize);
-        	rng = new Random();
         	detector = new CollisionDetector(width);
         	
         	GenerateObstacles();
@@ -64,13 +78,13 @@ namespace BouncyBall
         
         private void GenerateObstacles()
         {
-        	const int InitialHeight = 400;
-        	
-        	for(;topBlockYPos < InitialHeight; topBlockYPos += BlocksInterval)
+        	for(;topBlockYPos <= bounds.Item2; topBlockYPos += BlocksInterval)
         	{
         		var obstaclesRow = CreateObstacleRow(topBlockYPos);
         		Obstacles.AddRange(obstaclesRow);
         	}
+        	
+        	topBlockYPos -= BlocksInterval;
         }
         
         private List<Entity> CreateObstacleRow(double yPos)
@@ -86,10 +100,10 @@ namespace BouncyBall
         	{
         		int oneSize = rng.Next(1, MaxOneSize);
         		
-        		if(rng.NextDouble() > 0.33)
+        		if(rng.NextDouble() > 0.4)
         		{
         			double xPos = size * (BlockSize + Margin);
-        			var newEntity = new Entity(xPos, yPos, BlockSize * oneSize, BlockSize);
+        			var newEntity = new Block(xPos, yPos, BlockSize * oneSize, BlockSize);
         			createdEntities.Add(newEntity);
         		}
         		else
@@ -103,6 +117,17 @@ namespace BouncyBall
         	if(!hasGap)
         	{
         		createdEntities.RemoveAt(rng.Next(createdEntities.Count));
+        	}
+        	
+        	if((createdEntities.Count <= 0) ||
+        	   (createdEntities.Count == 1 && rng.NextDouble() > 0.5))
+        	{
+        		double maxX = bounds.Item1 - BlockSize;
+        		double xPos = rng.NextDouble() * maxX;
+        		var newMoving = new MovingBlock(xPos, yPos, BlockSize);
+        		movableBlocks.Add(newMoving);
+        		createdEntities.Clear();
+        		createdEntities.Add(newMoving);
         	}
         	
         	return createdEntities;
@@ -154,6 +179,28 @@ namespace BouncyBall
         	}
         }
         
+        private void MoveObstacles()
+        {
+        	foreach(var movingBlock in movableBlocks)
+        	{
+        		movingBlock.Move();
+        	}
+        	
+        	foreach(var block in Obstacles)
+        	{
+        		if(block.Y + block.Height < BaseLine)
+        		{
+        			Obstacles.Remove(block);
+        			if(block is MovingBlock movable)
+        			{
+        				movableBlocks.Remove(movable);
+        			}
+        			
+        			ObjectRemoved?.Invoke(this, block);
+        		}
+        	}
+        }
+        
         private void MoveBall()
         {
 			if(Stand == null)
@@ -164,54 +211,38 @@ namespace BouncyBall
 			else if(!Ball.Jumping)
 			{
 				Ball.Stop();
+				
+				if(Stand is MovingBlock movable)
+    			{
+    				Ball.MoveBy(movable.Velocity.X, 0.0);
+    			}
 			}
 			
 			Ball.Move();
         }
         
-        private void MoveObstacles()
-        {
-        	foreach(var block in Obstacles)
-        	{
-        		if(block.Y + block.Height < BaseLine)
-        		{
-        			Obstacles.Remove(block);
-        			ObjectRemoved?.Invoke(this, block);
-        		}
-        	}
-        }
-        
         private void HandleCollisions()
         {
-        	var collision = detector.CheckCollision(Ball, Obstacles);
-			
-        	if(collision != null)
+        	// Movable block collisions
+        	foreach(var movingBlock in movableBlocks)
         	{
-        		if(collision.Block != null)
-        		{
-        			Ball.MoveOnEntity(collision.Block, collision.Side);
-        		}
-        		else
-        		{
-        			double xBySide = (collision.Side == CollisionSide.Left)
-        				? bounds.Item1 - Ball.Width
-        				: 0;
-        			Ball.MoveTo(xBySide, Ball.Y);
-        		}
-        		
-        		if(collision.IsSide)
-        		{
-        			Ball.Accelerate(-Ball.Velocity.X * 2, 0.0);
-        		}
-        		else if(collision.Side == CollisionSide.Bottom)
-        		{
-        			Ball.Accelerate(0.0, -Ball.Velocity.Y * 2);
-        		}
-        		else if(collision.Side == CollisionSide.Top)
-        		{
-        			Stand = collision.Block;
-        			Ball.Stop();
-        		}
+        		movingBlock.Bump = detector.CheckCollision(movingBlock, none);
+        		movingBlock.Update();
+        	}
+        	
+        	// Ball collisions
+        	Ball.Bump = detector.CheckCollision(Ball, Obstacles);
+			Ball.Update();
+			
+        	if(Ball.Bump?.Side == CollisionSide.Top)
+        	{
+        		Stand = Ball.Bump.Block;
+        	}
+        	
+        	// Game Over condition
+        	if(Ball.Y + Ball.Height < BaseLine)
+        	{
+        		GameOver?.Invoke(this, EventArgs.Empty);
         	}
         }
     }

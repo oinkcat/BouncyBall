@@ -11,9 +11,10 @@
 				   Text="00000" />
 				   
 			<Frame x:Name="ball"
-				   Background="Red" 
-				   WidthRequest="25"
-				   HeightRequest="25" 
-				   CornerRadius="50" />
+				   Background="Red"
+				   Padding="0"
+				   CornerRadius="30">
+				<Image x:Name="ballImage" HorizontalOptions="Fill" />
+			</Frame>
 		</AbsoluteLayout>
 </ContentPage>

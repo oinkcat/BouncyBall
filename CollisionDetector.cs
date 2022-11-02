@@ -29,7 +29,7 @@ namespace BouncyBall
         	}
         	else if(one.X + one.Width > width)
         	{
-        		return new Collision { Side = CollisionSide.Left };
+        		return new Collision { Side = CollisionSide.Left, RightBound = width };
         	}
         	
         	foreach(var ent in others)
@@ -65,7 +65,7 @@ namespace BouncyBall
         	else
         	{
         		var vSide = one.Jumping ? CollisionSide.Bottom : CollisionSide.Top;
-				var testEntity = new Entity(one.X, one.Y - one.Velocity.Y, one.Width, one.Height);
+				var testEntity = new Block(one.X, one.Y - one.Velocity.Y, one.Width, one.Height);
     			
     			collision.Side = !CheckCollides(testEntity, another)
     				? vSide
