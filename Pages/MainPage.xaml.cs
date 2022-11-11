@@ -15,13 +15,13 @@ namespace BouncyBall
 		
 		private Game game;
 		
-		private Dictionary<Entity, Frame> entityBlocks;
+		private Dictionary<Entity, Frame> entityElems;
 		
 		private List<Entity> createdBlocks;
 		
 		private List<Entity> removedBlocks;
 		
-		private ImageSource brickImage;
+		private ImageSource[] brickImages;
 		
 		private (double, double)? touchCoords;
 		
@@ -35,9 +35,14 @@ namespace BouncyBall
 			game.ObjectRemoved += HandleRemovedObject;
 			game.GameOver += HandleGameOver;
 			
-			brickImage = ImageSource.FromResource("BouncyBall.resources.brick.png");
+			brickImages = Enumerable.Range(0, 2)
+				.Select(i => {
+					string resName = $"BouncyBall.resources.brick{i + 1}.png";
+					return ImageSource.FromResource(resName);
+				})
+				.ToArray();
 			
-			entityBlocks = new Dictionary<Entity, Frame>();
+			entityElems = new Dictionary<Entity, Frame>();
 			createdBlocks = new List<Entity>();
 			removedBlocks = new List<Entity>();
 			
@@ -62,7 +67,7 @@ namespace BouncyBall
 		
 		private void ReStartGame()
 		{
-			entityBlocks.Clear();
+			entityElems.Clear();
 			createdBlocks.Clear();
 			removedBlocks.Clear();
 			
@@ -128,7 +133,7 @@ namespace BouncyBall
 			Dispatcher.BeginInvokeOnMainThread(() =>  {
 				MoveObjects();
 				HandleCreatedAndRemovedBlocks();
-				DisplayScore();
+				DisplayInfo();
 			});
 		}
 		
@@ -136,28 +141,54 @@ namespace BouncyBall
 		{
 			foreach(var newBlock in blocks)
 			{
-				var blockFrame = new Frame();
-				blockFrame.BackgroundColor = GetBlockColor(newBlock);
-				blockFrame.BorderColor = Color.Black;
-				blockFrame.Padding = new Thickness(1);
-				blockFrame.Content = new Image()
+				var blockFrame = CreateOrRecycleFrame(newBlock, out bool old);
+				
+				if(!old)
 				{
-					Aspect = Aspect.Fill,
-					Source = brickImage
-				};
-				layout.Children.Insert(0, blockFrame);
+					layout.Children.Insert(0, blockFrame);
+				}
+				
+				
 				PlaceBlock(newBlock, blockFrame);
-				entityBlocks.Add(newBlock, blockFrame);
+				entityElems.Add(newBlock, blockFrame);
 			}
 			
 			layout.RaiseChild(ball);
 		}
 		
-		private Color GetBlockColor(Entity block) => block switch
+		private Frame CreateOrRecycleFrame(Entity block, out bool recycled)
 		{
-			MovingBlock => Color.Purple,
-			_ => Color.Blue
-		};
+			bool isMoving = block is MovingBlock;
+			
+			var recycledBlock = removedBlocks
+				.FirstOrDefault(b => !((b is MovingBlock) ^ isMoving));
+			recycled = recycledBlock != null;
+				
+			if(recycled)
+			{
+				removedBlocks.Remove(recycledBlock);
+				var recycledFrame = entityElems[recycledBlock];
+				entityElems.Remove(recycledBlock);
+				
+				return recycledFrame;
+			}
+			else
+			{
+				return new Frame()
+				{
+					BackgroundColor = Color.Gray,
+					BorderColor = Color.Black,
+					Padding = new Thickness(1),
+					Content = new Image()
+					{
+						Aspect = Aspect.Fill,
+						Source = (block is MovingBlock) 
+							? brickImages[1]
+							: brickImages[0]
+					}
+				};
+			}
+		}
 		
 		private void PlaceBlock(Entity block, Frame frame)
 		{
@@ -172,12 +203,9 @@ namespace BouncyBall
 		
 		private void MoveObjects()
 		{
-			foreach(var (block, frame) in entityBlocks)
+			foreach(var (block, frame) in entityElems)
 			{
 				PlaceBlock(block, frame);
-				frame.BackgroundColor = (block == game.Stand)
-					? Color.Green
-					: GetBlockColor(block);
 			}
 			
 			PlaceBlock(game.Ball, ball);
@@ -185,8 +213,6 @@ namespace BouncyBall
 		
 		private void HandleCreatedAndRemovedBlocks()
 		{
-			layout.BatchBegin();
-			
 			// Place new blocks
 			if(createdBlocks.Count > 0)
 			{
@@ -199,18 +225,19 @@ namespace BouncyBall
 			
 			foreach(var removedBlock in removedBlocks)
 			{
-				var blockFrame = entityBlocks[removedBlock];
+				var blockFrame = entityElems[removedBlock];
 				layout.Children.Remove(blockFrame);
-				entityBlocks.Remove(removedBlock);
+				entityElems.Remove(removedBlock);
 			}
 			
 			removedBlocks.Clear();
-			layout.BatchCommit();
+			Console.WriteLine($"Clear at {Environment.TickCount}");
 		}
 		
-		private void DisplayScore()
+		private void DisplayInfo()
 		{
 			ScoreLabel.Text = game.Score.ToString().PadLeft(5, '0');
+			leftLabel.Text = game.Ball.JumpsLeft.ToString();
 		}
 		
 		private void HandleGameOver(object sender, EventArgs e)

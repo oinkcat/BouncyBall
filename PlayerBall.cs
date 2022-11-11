@@ -11,6 +11,10 @@ namespace BouncyBall
     {
         public const int Size = 30;
         
+        public int JumpsLeft { get; private set; }
+        
+        public bool CanJump => JumpsLeft > 0;
+        
         public PlayerBall(double x, double y)
         	: base(x, y, (double)Size, (double)Size) { }
         	
@@ -41,8 +45,13 @@ namespace BouncyBall
         		else if(Bump.Side == CollisionSide.Top)
         		{
         			Stop();
+        			ResetJumps();
         		}
         	}
         }
+        
+        public void ResetJumps() => JumpsLeft = 3;
+        
+        public void Jumped() => JumpsLeft--;
     }
 }

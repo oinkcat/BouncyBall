@@ -25,6 +25,8 @@ namespace BouncyBall
     	
     	private int tick;
     	
+    	private int rowNumber;
+    	
     	private double topBlockYPos;
     	
     	private HashSet<MovingBlock> movableBlocks;
@@ -37,7 +39,7 @@ namespace BouncyBall
     	
     	public int Score { get; private set; }
     	
-    	public Entity Ball { get; }
+    	public PlayerBall Ball { get; }
     	
     	public Entity Stand { get; private set; }
     	
@@ -65,6 +67,7 @@ namespace BouncyBall
         	Score = 0;
         	BaseLine = 0;
         	topBlockYPos = 0;
+        	rowNumber = 0;
         	
         	bounds = (width, height);
         	rowCount = (int)(height / BlockSize);
@@ -72,6 +75,8 @@ namespace BouncyBall
         	
         	GenerateObstacles();
         	Ball.MoveTo(width / 2, height / 2);
+        	Ball.Stop();
+        	Ball.ResetJumps();
         	
         	IsStarted = true;
         }
@@ -95,6 +100,7 @@ namespace BouncyBall
         	int fullSize = (int)bounds.Item1 / (BlockSize + Margin) + 1;
         	var createdEntities = new List<Entity>();
         	bool hasGap = false;
+        	int rowOffset = (++rowNumber % 2 == 0) ? Margin : 0;
         	
         	for(int size = 0; size < fullSize;)
         	{
@@ -102,7 +108,7 @@ namespace BouncyBall
         		
         		if(rng.NextDouble() > 0.4)
         		{
-        			double xPos = size * (BlockSize + Margin);
+        			double xPos = size * (BlockSize + Margin) + rowOffset;
         			var newEntity = new Block(xPos, yPos, BlockSize * oneSize, BlockSize);
         			createdEntities.Add(newEntity);
         		}
@@ -135,8 +141,12 @@ namespace BouncyBall
         
         public void Interact(double dx, double dy)
         {
-        	Stand = null;
-        	Ball.Accelerate(dx / 10.0f, 15.0f);
+        	if(Ball.CanJump)
+        	{
+        		Stand = null;
+        		Ball.Accelerate(dx / 10.0f, 15.0f);
+        		Ball.Jumped();
+        	}
         }
         
         public void Update()

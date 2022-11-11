@@ -14,7 +14,13 @@
 				   Background="Red"
 				   Padding="0"
 				   CornerRadius="30">
+				<Grid>
 				<Image x:Name="ballImage" HorizontalOptions="Fill" />
+				<Label x:Name="leftLabel"
+					TextColor="Yellow"
+					HorizontalTextAlignment="Center"
+					VerticalTextAlignment="Center" />
+				</Grid>
 			</Frame>
 		</AbsoluteLayout>
 </ContentPage>

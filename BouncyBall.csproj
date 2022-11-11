@@ -12,6 +12,8 @@
     </EmbeddedResource>
     <EmbeddedResource Include="resources/ball.png" />
     <EmbeddedResource Include="resources/brick.png" />
+    <EmbeddedResource Include="resources/brick1.png" />
+    <EmbeddedResource Include="resources/brick2.png" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Xamarin.Forms" Version="5.0.0" />
