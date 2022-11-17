@@ -9,9 +9,14 @@ namespace BouncyBall
 	/// </summary>
     public class Block : Entity
     {
+    	public PlayerBall StandingBall { get; set; }
+    	
     	public Block(double x, double y, double width, double height)
     		: base(x, y, width, height) { }
     	
-        public override void Update() { }
+        public override void Update()
+        {
+        	StandingBall = null;
+        }
     }
 }

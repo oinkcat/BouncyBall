@@ -35,9 +35,9 @@ namespace BouncyBall
 			game.ObjectRemoved += HandleRemovedObject;
 			game.GameOver += HandleGameOver;
 			
-			brickImages = Enumerable.Range(0, 2)
+			brickImages = Enumerable.Range(1, 3)
 				.Select(i => {
-					string resName = $"BouncyBall.resources.brick{i + 1}.png";
+					string resName = $"BouncyBall.resources.brick{i}.png";
 					return ImageSource.FromResource(resName);
 				})
 				.ToArray();
@@ -158,10 +158,8 @@ namespace BouncyBall
 		
 		private Frame CreateOrRecycleFrame(Entity block, out bool recycled)
 		{
-			bool isMoving = block is MovingBlock;
-			
 			var recycledBlock = removedBlocks
-				.FirstOrDefault(b => !((b is MovingBlock) ^ isMoving));
+				.FirstOrDefault(b => b.GetType() == block.GetType());
 			recycled = recycledBlock != null;
 				
 			if(recycled)
@@ -182,9 +180,11 @@ namespace BouncyBall
 					Content = new Image()
 					{
 						Aspect = Aspect.Fill,
-						Source = (block is MovingBlock) 
-							? brickImages[1]
-							: brickImages[0]
+						Source = block switch {
+							MovingBlock => brickImages[1],
+							BouncyBlock => brickImages[2],
+							_ => brickImages[0]
+						}
 					}
 				};
 			}

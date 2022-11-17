@@ -15,6 +15,8 @@ namespace BouncyBall
         
         public bool CanJump => JumpsLeft > 0;
         
+        public Block Stand { get; set; }
+        
         public PlayerBall(double x, double y)
         	: base(x, y, (double)Size, (double)Size) { }
         	
@@ -44,6 +46,8 @@ namespace BouncyBall
         		}
         		else if(Bump.Side == CollisionSide.Top)
         		{
+        			Stand = Bump.Block as Block;
+        			Stand.StandingBall = this;
         			Stop();
         			ResetJumps();
         		}

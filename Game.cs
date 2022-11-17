@@ -109,7 +109,7 @@ namespace BouncyBall
         		if(rng.NextDouble() > 0.4)
         		{
         			double xPos = size * (BlockSize + Margin) + rowOffset;
-        			var newEntity = new Block(xPos, yPos, BlockSize * oneSize, BlockSize);
+        			var newEntity = CreateBlock(xPos, yPos, BlockSize * oneSize, BlockSize);
         			createdEntities.Add(newEntity);
         		}
         		else
@@ -139,11 +139,25 @@ namespace BouncyBall
         	return createdEntities;
         }
         
+        public Block CreateBlock(double x, double y, double width, double height)
+        {
+        	double val = rng.NextDouble();
+        	
+        	if(val < 0.9)
+        	{
+        		return new Block(x, y, width, height);
+        	}
+        	else
+        	{
+        		return new BouncyBlock(x, y, BlockSize);
+        	}
+        }
+        
         public void Interact(double dx, double dy)
         {
         	if(Ball.CanJump)
         	{
-        		Stand = null;
+        		Ball.Stand = null;
         		Ball.Accelerate(dx / 10.0f, 15.0f);
         		Ball.Jumped();
         	}
@@ -237,17 +251,19 @@ namespace BouncyBall
         	foreach(var movingBlock in movableBlocks)
         	{
         		movingBlock.Bump = detector.CheckCollision(movingBlock, none);
-        		movingBlock.Update();
+        	}
+        	
+        	// Update block states
+        	foreach(var block in Obstacles)
+        	{
+        		block.Update();
         	}
         	
         	// Ball collisions
         	Ball.Bump = detector.CheckCollision(Ball, Obstacles);
 			Ball.Update();
 			
-        	if(Ball.Bump?.Side == CollisionSide.Top)
-        	{
-        		Stand = Ball.Bump.Block;
-        	}
+        	Stand = Ball.Stand;
         	
         	// Game Over condition
         	if(Ball.Y + Ball.Height < BaseLine)
