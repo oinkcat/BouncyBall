@@ -41,7 +41,7 @@ namespace BouncyBall
     	
     	public PlayerBall Ball { get; }
     	
-    	public Entity Stand { get; private set; }
+    	public Entity Stand => Ball.Stand;
     	
     	public List<Entity> Obstacles { get; }
     	
@@ -63,7 +63,6 @@ namespace BouncyBall
         {
         	Obstacles.Clear();
         	movableBlocks.Clear();
-        	Stand = null;
         	Score = 0;
         	BaseLine = 0;
         	topBlockYPos = 0;
@@ -77,6 +76,7 @@ namespace BouncyBall
         	Ball.MoveTo(width / 2, height / 2);
         	Ball.Stop();
         	Ball.ResetJumps();
+        	Ball.Stand = null;
         	
         	IsStarted = true;
         }
@@ -263,7 +263,7 @@ namespace BouncyBall
         	Ball.Bump = detector.CheckCollision(Ball, Obstacles);
 			Ball.Update();
 			
-        	Stand = Ball.Stand;
+        	//Stand = Ball.Stand;
         	
         	// Game Over condition
         	if(Ball.Y + Ball.Height < BaseLine)

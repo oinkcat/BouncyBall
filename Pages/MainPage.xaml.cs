@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Text;
 using System.Linq;
 using System.Collections.Generic;
 using System.Timers;
@@ -62,7 +63,9 @@ namespace BouncyBall
 			touchArea.TouchEnd += TouchCompleted;
 			layout.Children.Add(touchArea);
 			
-			ballImage.Source = ImageSource.FromResource("BouncyBall.resources.ball.png");
+			ballImage.Source = ImageSource.FromResource("BouncyBall.resources.oink.png");
+		
+			BackgroundImageSource = ImageSource.FromResource("BouncyBall.resources.back.png");
 		}
 		
 		private void ReStartGame()
@@ -245,12 +248,35 @@ namespace BouncyBall
 			Dispatcher.BeginInvokeOnMainThread(async () =>
 			{
 				moveTimer.Stop();
-				string msg = $"Your final score: {game.Score}";
-				await DisplayAlert("Game Over", msg, "OK");
+				
+				int rank = GetPlayerRank();
+				
+				var msgBuilder = new StringBuilder("Your final score: ");
+				msgBuilder.AppendLine(game.Score.ToString());
+				
+				if(rank > 0)
+				{
+					msgBuilder.Append($"#{rank} high score!");
+				}
+				
+				await DisplayAlert("Game Over", msgBuilder.ToString(), "OK");
 				
 				game.Initialize(Width, Height);
 				ReStartGame();
 			});
+		}
+		
+		private int GetPlayerRank()
+		{
+			var scoreTable = new HighScoreTable();
+			scoreTable.Load();
+			
+			if(scoreTable.TryStorePlayerScore(game.Score, out int rank))
+			{
+				scoreTable.Save();
+			}
+			
+			return rank;
 		}
 	}
 }
