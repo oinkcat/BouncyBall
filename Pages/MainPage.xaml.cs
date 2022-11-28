@@ -30,6 +30,8 @@ namespace BouncyBall
 		
 		public MainPage(Game game)
 		{
+			NavigationPage.SetHasNavigationBar(this, false);
+			
 			this.game = game;
 			
 			game.ObjectCreated += HandleNewObject;
@@ -259,10 +261,17 @@ namespace BouncyBall
 					msgBuilder.Append($"#{rank} high score!");
 				}
 				
-				await DisplayAlert("Game Over", msgBuilder.ToString(), "OK");
+				bool doRetry = await DisplayAlert("Game Over", msgBuilder.ToString(), "Retry", "End");
 				
-				game.Initialize(Width, Height);
-				ReStartGame();
+				if(doRetry)
+				{
+					game.Initialize(Width, Height);
+					ReStartGame();
+				}
+				else
+				{
+					await Navigation.PopModalAsync();
+				}
 			});
 		}
 		

@@ -1,0 +1,43 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
+	xmlns:xct="http://xamarin.com/schemas/2020/toolkit"
+	xmlns:local="clr-namespace:BouncyBall"
+	xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+	x:Class="BouncyBall.HighScoresPage"
+	Title="High Scores">
+	
+	<StackLayout Padding="10">
+		<Label FontSize="24">Top 10 player scores</Label>
+		
+		<ScrollView>
+			<ScrollView.Resources>
+				<Style TargetType="Label">
+					<Setter Property="VerticalOptions" Value="Center" />
+				</Style>
+			</ScrollView.Resources>
+			
+			<ListView ItemsSource="{Binding Scores}">
+				<ListView.ItemTemplate>
+					<DataTemplate>
+						<ViewCell>
+							<Grid>
+								<Grid.ColumnDefinitions>
+									<ColumnDefinition Width="50" />
+									<ColumnDefinition Width="Auto" />
+									<ColumnDefinition Width="*" />
+								</Grid.ColumnDefinitions>
+				
+								<Label Grid.Column="0" Text="{Binding Item1, StringFormat='#{0}'}" />
+								<Label Grid.Column="1" Text="{Binding Item2.Date,  StringFormat='{0:D}'}" />
+								<Label Grid.Column="2" 
+									   HorizontalOptions="End"
+									   Margin="10, 0"
+									   Text="{Binding Item2.Score}" />
+							</Grid>
+						</ViewCell>
+					</DataTemplate>
+				</ListView.ItemTemplate>
+			</ListView>
+		</ScrollView>
+	</StackLayout>
+</ContentPage>

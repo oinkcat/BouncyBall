@@ -17,6 +17,12 @@
     <EmbeddedResource Include="resources/brick3.png" />
     <EmbeddedResource Include="resources/oink.png" />
     <EmbeddedResource Include="resources/back.png" />
+    <EmbeddedResource Update="Pages/FrontPage.xaml">
+      <Generator>MSBuild:UpdateDesignTimeXaml</Generator>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Pages/HighScoresPage.xaml">
+      <Generator>MSBuild:UpdateDesignTimeXaml</Generator>
+    </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Xamarin.Forms" Version="5.0.0" />
