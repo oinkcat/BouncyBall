@@ -13,6 +13,8 @@ namespace BouncyBall
 			var resNames = Assembly.GetExecutingAssembly().GetManifestResourceNames();
 			Array.ForEach(resNames, Console.WriteLine);
 			
+			PlatformUtils.SetPortraitMode();
+			
 			InitializeComponent();
 			MainPage = new NavigationPage(new FrontPage());
 		}

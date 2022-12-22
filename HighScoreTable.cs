@@ -14,7 +14,14 @@ namespace BouncyBall
 		
 		public int Score { get; set; }
 		
+		public bool IsCurrent => HighScoreTable.IsInCurrentSession(this);
+		
 		public override string ToString() => $"{Date.ToShortDateString()} {Score}";
+		
+		public override int GetHashCode()
+		{
+			return (int)((Date.Date.Ticks * 90000 + Score) % int.MaxValue);
+		}
 	}
 	
 	/// <summary>
@@ -26,7 +33,19 @@ namespace BouncyBall
         
         private const int NUM_SCORES = 10;
         
+        private static HashSet<int> currentSessionHighHashes;
+        
         public List<HighScoreEntry> Scores { get; }
+        
+        static HighScoreTable()
+        {
+        	currentSessionHighHashes = new HashSet<int>();
+        }
+        
+        public static bool IsInCurrentSession(HighScoreEntry entry)
+        {
+        	return currentSessionHighHashes.Contains(entry.GetHashCode());
+        }
         
         public HighScoreTable() => Scores = new List<HighScoreEntry>();
         
@@ -52,6 +71,8 @@ namespace BouncyBall
         			
         		Scores.Clear();
         		Scores.AddRange(newScores);
+        		
+        		currentSessionHighHashes.Add(newEntry.GetHashCode());
         		
         		position = Scores.FindIndex(s => s.Date == newEntry.Date) + 1;
         	}

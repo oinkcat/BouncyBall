@@ -20,6 +20,7 @@ namespace BouncyBall
         {
         	if(Bump?.IsSide ?? false)
         	{
+        		MoveBy(-Velocity.X, 0.0);
     			Accelerate(-Velocity.X * 2, 0.0);
         	}
         }

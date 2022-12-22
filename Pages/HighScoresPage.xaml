@@ -7,12 +7,18 @@
 	Title="High Scores">
 	
 	<StackLayout Padding="10">
-		<Label FontSize="24">Top 10 player scores</Label>
+		<Label FontSize="24" Margin="0,0,0,10">Top 10 player scores</Label>
 		
 		<ScrollView>
 			<ScrollView.Resources>
 				<Style TargetType="Label">
 					<Setter Property="VerticalOptions" Value="Center" />
+
+					<Style.Triggers>
+						<DataTrigger TargetType="Label" Binding="{Binding Item2.IsCurrent}" Value="true">
+							<Setter Property="TextColor" Value="Yellow" />
+						</DataTrigger>
+					</Style.Triggers>
 				</Style>
 			</ScrollView.Resources>
 			
