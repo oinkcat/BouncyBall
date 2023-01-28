@@ -3,6 +3,7 @@ using System.IO;
 using System.Timers;
 using System.Reflection;
 using Xamarin.Forms;
+using XamarinFormsUiLib;
 
 namespace BouncyBall
 {
@@ -13,7 +14,7 @@ namespace BouncyBall
 			var resNames = Assembly.GetExecutingAssembly().GetManifestResourceNames();
 			Array.ForEach(resNames, Console.WriteLine);
 			
-			PlatformUtils.SetPortraitMode();
+			Ui.Orientation = ScreenOrientation.Portrait;
 			
 			InitializeComponent();
 			MainPage = new NavigationPage(new FrontPage());

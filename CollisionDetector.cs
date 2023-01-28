@@ -23,6 +23,14 @@ namespace BouncyBall
         
         public Collision CheckCollision(Entity one, IList<Entity> others)
         {
+        	foreach(var ent in others)
+        	{
+        		if(CheckCollides(one, ent))
+        		{
+        			return GetCollisionDetails(one, ent);
+        		}
+        	}
+        	
         	if(one.X < 0)
         	{
         		return new Collision { Side = CollisionSide.Right };
@@ -30,14 +38,6 @@ namespace BouncyBall
         	else if(one.X + one.Width > width)
         	{
         		return new Collision { Side = CollisionSide.Left, RightBound = width };
-        	}
-        	
-        	foreach(var ent in others)
-        	{
-        		if(CheckCollides(one, ent))
-        		{
-        			return GetCollisionDetails(one, ent);
-        		}
         	}
         	
         	return null;
