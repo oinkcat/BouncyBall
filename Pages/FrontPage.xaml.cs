@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
-using Xamarin.Forms;
+using Microsoft.Maui;
+using Microsoft.Maui.Controls;
 
 namespace BouncyBall
 {
@@ -22,7 +23,7 @@ namespace BouncyBall
 			await Navigation.PushAsync(new HighScoresPage());
 		}
 		
-		private void Exit_Clicked(object sender, EventArgs e)
+		private async void Exit_Clicked(object sender, EventArgs e)
 		{
 			Environment.Exit(0);
 		}

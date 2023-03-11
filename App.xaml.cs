@@ -2,8 +2,9 @@
 using System.IO;
 using System.Timers;
 using System.Reflection;
-using Xamarin.Forms;
-using XamarinFormsUiLib;
+using Microsoft.Maui;
+using Microsoft.Maui.Controls;
+using MauiLib;
 
 namespace BouncyBall
 {

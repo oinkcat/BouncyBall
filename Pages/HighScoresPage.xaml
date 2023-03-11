@@ -1,6 +1,6 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
-	xmlns:xct="http://xamarin.com/schemas/2020/toolkit"
+<?xml version="1.0" encoding="utf-8"?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+	xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
 	xmlns:local="clr-namespace:BouncyBall"
 	xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
 	x:Class="BouncyBall.HighScoresPage"

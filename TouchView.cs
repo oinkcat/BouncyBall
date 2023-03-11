@@ -1,10 +1,14 @@
 ﻿using System;
 using Android.Views;
-using Xamarin.Forms;
-using Xamarin.Forms.Platform.Android;
-using Xamarin.Essentials;
+using Microsoft.Maui;
+using Microsoft.Maui.Controls;
+using Microsoft.Maui.ApplicationModel;
+using Microsoft.Maui.Networking;
+using Microsoft.Maui.Devices;
+using Microsoft.Maui.Devices.Sensors;
+using Microsoft.Maui.Controls.Compatibility.Platform.Android;
 
-using XPlatform = Xamarin.Essentials.Platform;
+using XPlatform = Microsoft.Maui.ApplicationModel.Platform;
 using AView = Android.Views.View;
 
 namespace BouncyBall
@@ -27,7 +31,9 @@ namespace BouncyBall
         public TouchView()
         {
             nativeView = new AView(XPlatform.CurrentActivity);
-            nativeView.Touch += View_Touch;
+			nativeView.SetMinimumWidth(-1);
+			nativeView.SetMinimumHeight(-1);
+			nativeView.Touch += View_Touch;
             
             dpi = DeviceDisplay.MainDisplayInfo.Density;
 

@@ -1,26 +1,30 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
 	xmlns:local="clr-namespace:BouncyBall"
 	xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
 	x:Class="BouncyBall.MainPage">
-		<AbsoluteLayout x:Name="layout">
-			<Label x:Name="ScoreLabel"
-				   HorizontalOptions="End"
-				   VerticalOptions="Start"
-				   Margin="4"
-				   Text="00000" />
-				   
-			<Frame x:Name="ball"
+		<Grid>
+			<AbsoluteLayout x:Name="layout">
+				<Frame x:Name="ball"
 				   Background="Transparent"
 				   Padding="0"
 				   CornerRadius="30">
-				<Grid>
-				<Image x:Name="ballImage" HorizontalOptions="Fill" />
-				<Label x:Name="leftLabel"
-					TextColor="Yellow"
-					HorizontalTextAlignment="Center"
-					VerticalTextAlignment="Center" />
-				</Grid>
-			</Frame>
-		</AbsoluteLayout>
+					<Grid>
+						<Image x:Name="ballImage" HorizontalOptions="Fill" />
+						<Label x:Name="leftLabel"
+							TextColor="Yellow"
+							HorizontalTextAlignment="Center"
+							VerticalTextAlignment="Center" />
+					</Grid>
+				</Frame>
+			</AbsoluteLayout>
+			
+			
+			<Label x:Name="ScoreLabel"
+				   HorizontalOptions="Start"
+				   VerticalOptions="Start"
+				   Margin="4"
+				   Text="00000" />
+			<local:TouchView x:Name="touchArea" ZIndex="10" />
+		</Grid>
 </ContentPage>

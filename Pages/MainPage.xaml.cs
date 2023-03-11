@@ -3,7 +3,9 @@ using System.Text;
 using System.Linq;
 using System.Collections.Generic;
 using System.Timers;
-using Xamarin.Forms;
+using Microsoft.Maui;
+using Microsoft.Maui.Controls;
+using Microsoft.Maui.Graphics;
 
 namespace BouncyBall
 {
@@ -13,98 +15,98 @@ namespace BouncyBall
 	public partial class MainPage : ContentPage
 	{
 		private Timer moveTimer;
-		
+
 		private Game game;
-		
+
 		private Dictionary<Entity, Frame> entityElems;
-		
+
 		private List<Entity> createdBlocks;
-		
+
 		private List<Entity> removedBlocks;
-		
+
 		private ImageSource[] brickImages;
-		
+
 		private (double, double)? touchCoords;
-		
+
 		private (double, double)? moveCoords;
-		
+
 		public MainPage(Game game)
 		{
 			NavigationPage.SetHasNavigationBar(this, false);
-			
+
 			this.game = game;
-			
+
 			game.ObjectCreated += HandleNewObject;
 			game.ObjectRemoved += HandleRemovedObject;
 			game.GameOver += HandleGameOver;
-			
+
 			brickImages = Enumerable.Range(1, 3)
-				.Select(i => {
+				.Select(i =>
+				{
 					string resName = $"BouncyBall.resources.brick{i}.png";
 					return ImageSource.FromResource(resName);
 				})
 				.ToArray();
-			
+
 			entityElems = new Dictionary<Entity, Frame>();
 			createdBlocks = new List<Entity>();
 			removedBlocks = new List<Entity>();
-			
+
 			InitializeComponent();
-			
-			this.SizeChanged += (s, e) => {
-				if(!game.IsStarted)
+
+			this.SizeChanged += (s, e) =>
+			{
+				if (!game.IsStarted)
 				{
 					game.Initialize(Width, Height);
-					Dispatcher.BeginInvokeOnMainThread(ReStartGame);
+					Dispatcher.Dispatch(ReStartGame);
 				}
 			};
 			
-			var touchArea = new TouchView();
 			touchArea.TouchStart += TouchStarted;
 			touchArea.TouchMove += TouchMoved;
 			touchArea.TouchEnd += TouchCompleted;
-			layout.Children.Add(touchArea);
-			
+
 			ballImage.Source = ImageSource.FromResource("BouncyBall.resources.oink.png");
-		
+
 			BackgroundImageSource = ImageSource.FromResource("BouncyBall.resources.back.png");
 		}
-		
+
 		private void ReStartGame()
 		{
 			entityElems.Clear();
 			createdBlocks.Clear();
 			removedBlocks.Clear();
-			
+
 			var blocksToRemove = layout.Children
 				.OfType<Frame>()
 				.Where(b => b != ball)
 				.ToArray();
-				
-			foreach(var view in blocksToRemove)
+
+			foreach (var view in blocksToRemove)
 			{
-				layout.Children.Remove(view);
+				layout.Remove(view);
 			}
-			
+
 			SpawnBlocks(game.Obstacles);
 			StartBall();
 		}
-		
-		
+
+
 		private void TouchStarted(object sender, (double, double) coords)
 		{
 			touchCoords = coords;
 			moveCoords = touchCoords;
 		}
-		
+
 		private void TouchMoved(object sender, (double, double) coords)
 		{
 			moveCoords = coords;
 		}
-		
+
 		private void TouchCompleted(object sender, EventArgs e)
 		{
-			if(touchCoords.HasValue)
+			if (touchCoords.HasValue)
 			{
 				var (tx, ty) = touchCoords.Value;
 				var (mx, my) = moveCoords.Value;
@@ -112,80 +114,79 @@ namespace BouncyBall
 				touchCoords = null;
 			}
 		}
-		
+
 		private void HandleNewObject(object sender, Entity newObject)
 		{
 			createdBlocks.Add(newObject);
 		}
-		
+
 		private void HandleRemovedObject(object sender, Entity removedObject)
 		{
 			removedBlocks.Add(removedObject);
 		}
-		
+
 		private void StartBall()
 		{
 			moveTimer = new Timer(30);
 			moveTimer.Elapsed += UpdateState;
 			moveTimer.Start();
-			
+
 			UpdateState(this, EventArgs.Empty);
 		}
-		
+
 		private void UpdateState(object sender, EventArgs e)
 		{
 			game.Update();
-			Dispatcher.BeginInvokeOnMainThread(() =>  {
+			Dispatcher.Dispatch(() =>
+			{
 				MoveObjects();
 				HandleCreatedAndRemovedBlocks();
 				DisplayInfo();
 			});
 		}
-		
+
 		private void SpawnBlocks(IList<Entity> blocks)
 		{
-			foreach(var newBlock in blocks)
+			foreach (var newBlock in blocks)
 			{
 				var blockFrame = CreateOrRecycleFrame(newBlock, out bool old);
-				
-				if(!old)
-				{
-					layout.Children.Insert(0, blockFrame);
+
+				if (!old)
+				{	
+					layout.Insert(layout.Count, blockFrame);
 				}
-				
-				
+
 				PlaceBlock(newBlock, blockFrame);
 				entityElems.Add(newBlock, blockFrame);
 			}
-			
-			layout.RaiseChild(ball);
 		}
-		
+
 		private Frame CreateOrRecycleFrame(Entity block, out bool recycled)
 		{
 			var recycledBlock = removedBlocks
 				.FirstOrDefault(b => b.GetType() == block.GetType());
 			recycled = recycledBlock != null;
-				
-			if(recycled)
+
+			if (recycled)
 			{
 				removedBlocks.Remove(recycledBlock);
 				var recycledFrame = entityElems[recycledBlock];
 				entityElems.Remove(recycledBlock);
-				
+
 				return recycledFrame;
 			}
 			else
 			{
 				return new Frame()
 				{
-					BackgroundColor = Color.Gray,
-					BorderColor = Color.Black,
+					BackgroundColor = Colors.Gray,
+					BorderColor = Colors.Black,
 					Padding = new Thickness(1),
 					Content = new Image()
 					{
 						Aspect = Aspect.Fill,
-						Source = block switch {
+						Source = block switch
+						{
 							MovingBlock => brickImages[1],
 							BouncyBlock => brickImages[2],
 							_ => brickImages[0]
@@ -194,76 +195,78 @@ namespace BouncyBall
 				};
 			}
 		}
-		
+
 		private void PlaceBlock(Entity block, Frame frame)
 		{
 			double blockY = Height - block.Y - block.Height;
-			AbsoluteLayout.SetLayoutBounds(frame, new Rectangle {
+			AbsoluteLayout.SetLayoutBounds(frame, new Rect
+			{
 				X = block.X,
 				Y = blockY + game.BaseLine,
 				Width = block.Width,
 				Height = block.Height
 			});
+			frame.ZIndex = -10;
 		}
-		
+
 		private void MoveObjects()
 		{
-			foreach(var (block, frame) in entityElems)
+			foreach (var (block, frame) in entityElems)
 			{
 				PlaceBlock(block, frame);
 			}
-			
+
 			PlaceBlock(game.Ball, ball);
 		}
-		
+
 		private void HandleCreatedAndRemovedBlocks()
 		{
 			// Place new blocks
-			if(createdBlocks.Count > 0)
+			if (createdBlocks.Count > 0)
 			{
 				SpawnBlocks(createdBlocks);
 				createdBlocks.Clear();
 			}
-			
+
 			// Remove blocks
-			if(removedBlocks.Count < 20) { return; }
-			
-			foreach(var removedBlock in removedBlocks)
+			if (removedBlocks.Count < 20) { return; }
+
+			foreach (var removedBlock in removedBlocks)
 			{
 				var blockFrame = entityElems[removedBlock];
-				layout.Children.Remove(blockFrame);
+				layout.Remove(blockFrame);
 				entityElems.Remove(removedBlock);
 			}
-			
+
 			removedBlocks.Clear();
 			Console.WriteLine($"Clear at {Environment.TickCount}");
 		}
-		
+
 		private void DisplayInfo()
 		{
 			ScoreLabel.Text = game.Score.ToString().PadLeft(5, '0');
 			leftLabel.Text = game.Ball.JumpsLeft.ToString();
 		}
-		
+
 		private void HandleGameOver(object sender, EventArgs e)
 		{
-			Dispatcher.BeginInvokeOnMainThread(async () =>
+			Dispatcher.Dispatch(async () =>
 			{
 				moveTimer.Stop();
-				
+
 				int rank = GetPlayerRank();
-				
+
 				var msgBuilder = new StringBuilder("Your final score: ");
 				msgBuilder.AppendLine(game.Score.ToString());
-				
-				if(rank > 0)
+
+				if (rank > 0)
 				{
 					msgBuilder.Append($"#{rank} high score!");
 				}
-				
+
 				bool doRetry = await DisplayAlert("Game Over", msgBuilder.ToString(), "Retry", "End");
-				
-				if(doRetry)
+
+				if (doRetry)
 				{
 					game.Initialize(Width, Height);
 					ReStartGame();
@@ -274,17 +277,17 @@ namespace BouncyBall
 				}
 			});
 		}
-		
+
 		private int GetPlayerRank()
 		{
 			var scoreTable = new HighScoreTable();
 			scoreTable.Load();
-			
-			if(scoreTable.TryStorePlayerScore(game.Score, out int rank))
+
+			if (scoreTable.TryStorePlayerScore(game.Score, out int rank))
 			{
 				scoreTable.Save();
 			}
-			
+
 			return rank;
 		}
 	}
