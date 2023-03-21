@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.IO;
 using System.Linq;
 using System.Collections.Generic;
@@ -33,7 +33,7 @@ namespace BouncyBall
         
         private const int NUM_SCORES = 10;
         
-        private static HashSet<int> currentSessionHighHashes;
+        private readonly static HashSet<int> currentSessionHighHashes;
         
         public List<HighScoreEntry> Scores { get; }
         

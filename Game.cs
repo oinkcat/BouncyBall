@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Linq;
 using System.Collections.Generic;
 
@@ -29,7 +29,7 @@ namespace BouncyBall
     	
     	private double topBlockYPos;
     	
-    	private HashSet<MovingBlock> movableBlocks;
+    	private readonly HashSet<MovingBlock> movableBlocks;
     	
     	private CollisionDetector detector;
     	

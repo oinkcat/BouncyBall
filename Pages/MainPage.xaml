@@ -4,6 +4,8 @@
 	xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
 	x:Class="BouncyBall.MainPage">
 		<Grid>
+			<local:OffsetTiledImage x:Name="backImage" />
+		
 			<AbsoluteLayout x:Name="layout">
 				<Frame x:Name="ball"
 				   Background="Transparent"
@@ -25,6 +27,7 @@
 				   VerticalOptions="Start"
 				   Margin="4"
 				   Text="00000" />
+				   
 			<local:TouchView x:Name="touchArea" ZIndex="10" />
 		</Grid>
 </ContentPage>

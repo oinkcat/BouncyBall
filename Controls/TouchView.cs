@@ -26,7 +26,7 @@ namespace BouncyBall
 
         private AView nativeView;
         
-        private double dpi;
+        private readonly double dpi;
 
         public TouchView()
         {
@@ -39,6 +39,7 @@ namespace BouncyBall
 
             Content = nativeView.ToView();
         }
+		
 
         private void View_Touch(object sender, AView.TouchEventArgs e)
         {

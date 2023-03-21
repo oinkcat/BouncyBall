@@ -16,15 +16,15 @@ namespace BouncyBall
 	{
 		private Timer moveTimer;
 
-		private Game game;
+		private readonly Game game;
 
-		private Dictionary<Entity, Frame> entityElems;
+		private readonly Dictionary<Entity, Frame> entityElems;
 
-		private List<Entity> createdBlocks;
+		private readonly List<Entity> createdBlocks;
 
-		private List<Entity> removedBlocks;
+		private readonly List<Entity> removedBlocks;
 
-		private ImageSource[] brickImages;
+		private readonly ImageSource[] brickImages;
 
 		private (double, double)? touchCoords;
 
@@ -69,7 +69,7 @@ namespace BouncyBall
 
 			ballImage.Source = ImageSource.FromResource("BouncyBall.resources.oink.png");
 
-			BackgroundImageSource = ImageSource.FromResource("BouncyBall.resources.back.png");
+			backImage.SetImageByName("BouncyBall.resources.back.png");
 		}
 
 		private void ReStartGame()
@@ -211,6 +211,11 @@ namespace BouncyBall
 
 		private void MoveObjects()
 		{
+			if(game.BaseLine > 10)
+			{
+				backImage.Offset = game.BaseLine / 2;
+			}
+			
 			foreach (var (block, frame) in entityElems)
 			{
 				PlaceBlock(block, frame);

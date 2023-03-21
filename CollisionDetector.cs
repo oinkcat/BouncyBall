@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Linq;
 using System.Collections.Generic;
 
@@ -9,7 +9,7 @@ namespace BouncyBall
 	/// </summary>
     public class CollisionDetector 
     {
-    	private double width;
+    	private readonly double width;
     	
     	public CollisionDetector(double width) => this.width = width;
     	
