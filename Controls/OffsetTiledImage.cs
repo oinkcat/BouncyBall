@@ -13,6 +13,10 @@ namespace BouncyBall;
 /// </summary>
 public class OffsetTiledImage : ContentView
 {
+	private const int NumBrickLines = 10;
+	
+	private const int OffsetBrickLines = 4;
+	
 	private readonly Image testImg;
 	
 	private readonly StackLayout layout;
@@ -41,7 +45,7 @@ public class OffsetTiledImage : ContentView
 	private void Image_Loaded(object sender, EventArgs e)
 	{
 		double imgHeight = testImg.Height;
-		vMargin = Math.Ceiling(imgHeight) / 2;
+		vMargin = Math.Ceiling(imgHeight / NumBrickLines) * OffsetBrickLines;
 		double baseHeight = Application.Current.MainPage.Height + vMargin;
 		
 		if(imgHeight <= 0) { return; }

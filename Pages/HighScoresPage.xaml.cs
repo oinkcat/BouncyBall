@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.Maui;
@@ -32,7 +32,9 @@ namespace BouncyBall
 		
 		protected override bool OnBackButtonPressed()
 		{
-			Console.WriteLine("Back");
+			base.OnBackButtonPressed();
+			
+			Navigation.PopAsync();
 			return true;
 		}
 	}
