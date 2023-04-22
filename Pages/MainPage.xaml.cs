@@ -17,14 +17,8 @@ namespace BouncyBall
 		private Timer moveTimer;
 
 		private readonly Game game;
-
-		private readonly Dictionary<Entity, Frame> entityElems;
-
-		private readonly List<Entity> createdBlocks;
-
-		private readonly List<Entity> removedBlocks;
-
-		private readonly ImageSource[] brickImages;
+		
+		private readonly RecyclingEntitiesPool entitiesPool;
 
 		private (double, double)? touchCoords;
 
@@ -39,18 +33,8 @@ namespace BouncyBall
 			game.ObjectCreated += HandleNewObject;
 			game.ObjectRemoved += HandleRemovedObject;
 			game.GameOver += HandleGameOver;
-
-			brickImages = Enumerable.Range(1, 3)
-				.Select(i =>
-				{
-					string resName = $"BouncyBall.resources.brick{i}.png";
-					return ImageSource.FromResource(resName);
-				})
-				.ToArray();
-
-			entityElems = new Dictionary<Entity, Frame>();
-			createdBlocks = new List<Entity>();
-			removedBlocks = new List<Entity>();
+			
+			entitiesPool = new RecyclingEntitiesPool();
 
 			InitializeComponent();
 
@@ -68,15 +52,12 @@ namespace BouncyBall
 			touchArea.TouchEnd += TouchCompleted;
 
 			ballImage.Source = ImageSource.FromResource("BouncyBall.resources.oink.png");
-
 			backImage.SetImageByName("BouncyBall.resources.back.png");
 		}
 
 		private void ReStartGame()
 		{
-			entityElems.Clear();
-			createdBlocks.Clear();
-			removedBlocks.Clear();
+			entitiesPool.Reset();
 
 			var blocksToRemove = layout.Children
 				.OfType<Frame>()
@@ -117,12 +98,13 @@ namespace BouncyBall
 
 		private void HandleNewObject(object sender, Entity newObject)
 		{
-			createdBlocks.Add(newObject);
+			entitiesPool.EntityAdded(newObject);
 		}
 
 		private void HandleRemovedObject(object sender, Entity removedObject)
 		{
-			removedBlocks.Add(removedObject);
+			Dispatcher.Dispatch(() => entitiesPool.GetFrame(removedObject).IsVisible = false);
+			entitiesPool.EntityRemoved(removedObject);
 		}
 
 		private void StartBall()
@@ -140,59 +122,27 @@ namespace BouncyBall
 			Dispatcher.Dispatch(() =>
 			{
 				MoveObjects();
-				HandleCreatedAndRemovedBlocks();
+				entitiesPool.HandleBlocks(SpawnBlocks, frame => layout.Remove(frame));
 				DisplayInfo();
 			});
 		}
 
-		private void SpawnBlocks(IList<Entity> blocks)
+		private void SpawnBlocks(IEnumerable<Entity> blocks)
 		{
 			foreach (var newBlock in blocks)
 			{
-				var blockFrame = CreateOrRecycleFrame(newBlock, out bool old);
+				var blockFrame = entitiesPool.CreateOrRecycleFrame(newBlock, out bool old);
 
-				if (!old)
+				if (old)
+				{
+					blockFrame.IsVisible = true;
+				}
+				else
 				{	
 					layout.Insert(layout.Count, blockFrame);
 				}
 
 				PlaceBlock(newBlock, blockFrame);
-				entityElems.Add(newBlock, blockFrame);
-			}
-		}
-
-		private Frame CreateOrRecycleFrame(Entity block, out bool recycled)
-		{
-			var recycledBlock = removedBlocks
-				.FirstOrDefault(b => b.GetType() == block.GetType());
-			recycled = recycledBlock != null;
-
-			if (recycled)
-			{
-				removedBlocks.Remove(recycledBlock);
-				var recycledFrame = entityElems[recycledBlock];
-				entityElems.Remove(recycledBlock);
-
-				return recycledFrame;
-			}
-			else
-			{
-				return new Frame()
-				{
-					BackgroundColor = Colors.Gray,
-					BorderColor = Colors.Black,
-					Padding = new Thickness(1),
-					Content = new Image()
-					{
-						Aspect = Aspect.Fill,
-						Source = block switch
-						{
-							MovingBlock => brickImages[1],
-							BouncyBlock => brickImages[2],
-							_ => brickImages[0]
-						}
-					}
-				};
 			}
 		}
 
@@ -216,35 +166,12 @@ namespace BouncyBall
 				backImage.Offset = game.BaseLine / 2;
 			}
 			
-			foreach (var (block, frame) in entityElems)
+			foreach (var (block, frame) in entitiesPool.GetAllEntities())
 			{
 				PlaceBlock(block, frame);
 			}
 
 			PlaceBlock(game.Ball, ball);
-		}
-
-		private void HandleCreatedAndRemovedBlocks()
-		{
-			// Place new blocks
-			if (createdBlocks.Count > 0)
-			{
-				SpawnBlocks(createdBlocks);
-				createdBlocks.Clear();
-			}
-
-			// Remove blocks
-			if (removedBlocks.Count < 20) { return; }
-
-			foreach (var removedBlock in removedBlocks)
-			{
-				var blockFrame = entityElems[removedBlock];
-				layout.Remove(blockFrame);
-				entityElems.Remove(removedBlock);
-			}
-
-			removedBlocks.Clear();
-			Console.WriteLine($"Clear at {Environment.TickCount}");
 		}
 
 		private void DisplayInfo()

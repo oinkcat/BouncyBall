@@ -94,6 +94,7 @@ namespace BouncyBall
         
         private List<Entity> CreateObstacleRow(double yPos)
         {
+			// TODO: Create ObstacleGenerator
         	const int MaxOneSize = 3;
         	const int Margin = BallSize;
         	
