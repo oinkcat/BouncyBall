@@ -5,7 +5,7 @@ using Microsoft.Maui.Graphics;
 using Microsoft.Maui;
 using Microsoft.Maui.Controls;
 
-namespace BouncyBall;
+namespace BouncyBall.Game;
 
 /// <summary>
 /// Holds game entities which can be reused

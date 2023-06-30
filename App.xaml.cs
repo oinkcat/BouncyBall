@@ -6,19 +6,18 @@ using Microsoft.Maui;
 using Microsoft.Maui.Controls;
 using MauiLib;
 
-namespace BouncyBall
+namespace BouncyBall;
+
+public partial class App : Application
 {
-	public partial class App : Application
+	public App()
 	{
-		public App()
-		{
-			var resNames = Assembly.GetExecutingAssembly().GetManifestResourceNames();
-			Array.ForEach(resNames, Console.WriteLine);
-			
-			Ui.Orientation = ScreenOrientation.Portrait;
-			
-			InitializeComponent();
-			MainPage = new NavigationPage(new FrontPage());
-		}
+		var resNames = Assembly.GetExecutingAssembly().GetManifestResourceNames();
+		Array.ForEach(resNames, Console.WriteLine);
+
+		Ui.Orientation = ScreenOrientation.Portrait;
+
+		InitializeComponent();
+		MainPage = new NavigationPage(new FrontPage());
 	}
 }

@@ -6,221 +6,237 @@ using System.Timers;
 using Microsoft.Maui;
 using Microsoft.Maui.Controls;
 using Microsoft.Maui.Graphics;
+using BouncyBall.Game;
 
-namespace BouncyBall
+namespace BouncyBall;
+
+/// <summary>
+/// Presentation logic
+/// </summary>
+public partial class MainPage : ContentPage
 {
-	/// <summary>
-	/// Presentation logic
-	/// </summary>
-	public partial class MainPage : ContentPage
+	private Timer moveTimer;
+
+	private readonly GameLogic game;
+
+	private readonly RecyclingEntitiesPool entitiesPool;
+
+	private (double, double)? touchCoords;
+
+	private (double, double)? moveCoords;
+
+	public MainPage(GameLogic game)
 	{
-		private Timer moveTimer;
+		NavigationPage.SetHasNavigationBar(this, false);
 
-		private readonly Game game;
-		
-		private readonly RecyclingEntitiesPool entitiesPool;
+		this.game = game;
 
-		private (double, double)? touchCoords;
+		game.ObjectCreated += HandleNewObject;
+		game.ObjectRemoved += HandleRemovedObject;
+		game.GameOver += HandleGameOver;
 
-		private (double, double)? moveCoords;
+		entitiesPool = new RecyclingEntitiesPool();
 
-		public MainPage(Game game)
+		InitializeComponent();
+
+		this.SizeChanged += (s, e) =>
 		{
-			NavigationPage.SetHasNavigationBar(this, false);
-
-			this.game = game;
-
-			game.ObjectCreated += HandleNewObject;
-			game.ObjectRemoved += HandleRemovedObject;
-			game.GameOver += HandleGameOver;
-			
-			entitiesPool = new RecyclingEntitiesPool();
-
-			InitializeComponent();
-
-			this.SizeChanged += (s, e) =>
+			if (!game.IsStarted)
 			{
-				if (!game.IsStarted)
-				{
-					game.Initialize(Width, Height);
-					Dispatcher.Dispatch(ReStartGame);
-				}
-			};
-			
-			touchArea.TouchStart += TouchStarted;
-			touchArea.TouchMove += TouchMoved;
-			touchArea.TouchEnd += TouchCompleted;
+				game.Initialize(Width, Height);
+				Dispatcher.Dispatch(ReStartGame);
+			}
+		};
 
-			ballImage.Source = ImageSource.FromResource("BouncyBall.resources.oink.png");
-			backImage.SetImageByName("BouncyBall.resources.back.png");
+		touchArea.TouchStart += TouchStarted;
+		touchArea.TouchMove += TouchMoved;
+		touchArea.TouchEnd += TouchCompleted;
+
+		ballImage.Source = ImageSource.FromResource("BouncyBall.resources.oink.png");
+		backImage.SetImageByName("BouncyBall.resources.back.png");
+	}
+
+	private void ReStartGame()
+	{
+		entitiesPool.Reset();
+
+		var blocksToRemove = layout.Children
+			.OfType<Frame>()
+
+			.Where(b => b != ball)
+			.ToArray();
+
+		foreach (var view in blocksToRemove)
+		{
+			layout.Remove(view);
 		}
 
-		private void ReStartGame()
+		SpawnBlocks(game.Obstacles);
+		StartBall();
+	}
+
+
+	private void TouchStarted(object sender, (double, double) coords)
+	{
+		touchCoords = coords;
+		moveCoords = touchCoords;
+	}
+
+	private void TouchMoved(object sender, (double, double) coords)
+	{
+		moveCoords = coords;
+	}
+
+	private void TouchCompleted(object sender, EventArgs e)
+	{
+		if (touchCoords.HasValue)
 		{
-			entitiesPool.Reset();
+			var (tx, ty) = touchCoords.Value;
+			var (mx, my) = moveCoords.Value;
+			game.Interact(tx - mx, ty - my);
+			touchCoords = null;
+		}
+	}
 
-			var blocksToRemove = layout.Children
-				.OfType<Frame>()
-				.Where(b => b != ball)
-				.ToArray();
+	private void HandleNewObject(object sender, Entity newObject)
+	{
+		entitiesPool.EntityAdded(newObject);
+	}
 
-			foreach (var view in blocksToRemove)
+	private void HandleRemovedObject(object sender, Entity removedObject)
+	{
+		Dispatcher.Dispatch(() => entitiesPool.GetFrame(removedObject).IsVisible = false);
+		entitiesPool.EntityRemoved(removedObject);
+	}
+
+	private void StartBall()
+	{
+		moveTimer = new Timer(30);
+		moveTimer.Elapsed += UpdateState;
+		moveTimer.Start();
+
+		UpdateState(this, EventArgs.Empty);
+	}
+
+	private void UpdateState(object sender, EventArgs e)
+	{
+		game.Update();
+		Dispatcher.Dispatch(() =>
+		{
+			MoveObjects();
+			entitiesPool.HandleBlocks(SpawnBlocks, frame => layout.Remove(frame));
+			DisplayInfo();
+		});
+	}
+
+	private void SpawnBlocks(IEnumerable<Entity> blocks)
+	{
+		foreach (var newBlock in blocks)
+		{
+			var blockFrame = entitiesPool.CreateOrRecycleFrame(newBlock, out bool old);
+
+			if (old)
 			{
-				layout.Remove(view);
+				blockFrame.IsVisible = true;
+			}
+			else
+			{
+				layout.Insert(layout.Count, blockFrame);
 			}
 
-			SpawnBlocks(game.Obstacles);
-			StartBall();
+			PlaceBlock(newBlock, blockFrame);
+		}
+	}
+
+	private void PlaceBlock(Entity block, Frame frame)
+	{
+		double blockY = Height - block.Y - block.Height;
+		AbsoluteLayout.SetLayoutBounds(frame, new Rect
+		{
+			X = block.X,
+			Y = blockY + game.BaseLine,
+			Width = block.Width,
+			Height = block.Height
+		});
+		frame.ZIndex = -10;
+	}
+
+	private void MoveObjects()
+	{
+		if (game.BaseLine > 10)
+		{
+			backImage.Offset = game.BaseLine / 2;
 		}
 
-
-		private void TouchStarted(object sender, (double, double) coords)
+		foreach (var (block, frame) in entitiesPool.GetAllEntities())
 		{
-			touchCoords = coords;
-			moveCoords = touchCoords;
+			PlaceBlock(block, frame);
 		}
 
-		private void TouchMoved(object sender, (double, double) coords)
-		{
-			moveCoords = coords;
-		}
+		PlaceBlock(game.Ball, ball);
+	}
 
-		private void TouchCompleted(object sender, EventArgs e)
+	private void DisplayInfo()
+	{
+		ScoreLabel.Text = game.Score.ToString().PadLeft(5, '0');
+		leftLabel.Text = game.Ball.JumpsLeft.ToString();
+	}
+
+	private void HandleGameOver(object sender, EventArgs e)
+	{
+		Dispatcher.Dispatch(async () =>
 		{
-			if (touchCoords.HasValue)
+			moveTimer.Stop();
+
+			int rank = GetPlayerRank();
+
+			var msgBuilder = new StringBuilder("Your final score: ");
+			msgBuilder.AppendLine(game.Score.ToString());
+
+			if (rank > 0)
 			{
-				var (tx, ty) = touchCoords.Value;
-				var (mx, my) = moveCoords.Value;
-				game.Interact(tx - mx, ty - my);
-				touchCoords = null;
-			}
-		}
-
-		private void HandleNewObject(object sender, Entity newObject)
-		{
-			entitiesPool.EntityAdded(newObject);
-		}
-
-		private void HandleRemovedObject(object sender, Entity removedObject)
-		{
-			Dispatcher.Dispatch(() => entitiesPool.GetFrame(removedObject).IsVisible = false);
-			entitiesPool.EntityRemoved(removedObject);
-		}
-
-		private void StartBall()
-		{
-			moveTimer = new Timer(30);
-			moveTimer.Elapsed += UpdateState;
-			moveTimer.Start();
-
-			UpdateState(this, EventArgs.Empty);
-		}
-
-		private void UpdateState(object sender, EventArgs e)
-		{
-			game.Update();
-			Dispatcher.Dispatch(() =>
-			{
-				MoveObjects();
-				entitiesPool.HandleBlocks(SpawnBlocks, frame => layout.Remove(frame));
-				DisplayInfo();
-			});
-		}
-
-		private void SpawnBlocks(IEnumerable<Entity> blocks)
-		{
-			foreach (var newBlock in blocks)
-			{
-				var blockFrame = entitiesPool.CreateOrRecycleFrame(newBlock, out bool old);
-
-				if (old)
-				{
-					blockFrame.IsVisible = true;
-				}
-				else
-				{	
-					layout.Insert(layout.Count, blockFrame);
-				}
-
-				PlaceBlock(newBlock, blockFrame);
-			}
-		}
-
-		private void PlaceBlock(Entity block, Frame frame)
-		{
-			double blockY = Height - block.Y - block.Height;
-			AbsoluteLayout.SetLayoutBounds(frame, new Rect
-			{
-				X = block.X,
-				Y = blockY + game.BaseLine,
-				Width = block.Width,
-				Height = block.Height
-			});
-			frame.ZIndex = -10;
-		}
-
-		private void MoveObjects()
-		{
-			if(game.BaseLine > 10)
-			{
-				backImage.Offset = game.BaseLine / 2;
-			}
-			
-			foreach (var (block, frame) in entitiesPool.GetAllEntities())
-			{
-				PlaceBlock(block, frame);
+				msgBuilder.Append($"#{rank} high score!");
 			}
 
-			PlaceBlock(game.Ball, ball);
-		}
+			bool doRetry = await DisplayAlert("Game Over", msgBuilder.ToString(), "Retry", "End");
 
-		private void DisplayInfo()
-		{
-			ScoreLabel.Text = game.Score.ToString().PadLeft(5, '0');
-			leftLabel.Text = game.Ball.JumpsLeft.ToString();
-		}
-
-		private void HandleGameOver(object sender, EventArgs e)
-		{
-			Dispatcher.Dispatch(async () =>
+			if (doRetry)
 			{
-				moveTimer.Stop();
-
-				int rank = GetPlayerRank();
-
-				var msgBuilder = new StringBuilder("Your final score: ");
-				msgBuilder.AppendLine(game.Score.ToString());
-
-				if (rank > 0)
-				{
-					msgBuilder.Append($"#{rank} high score!");
-				}
-
-				bool doRetry = await DisplayAlert("Game Over", msgBuilder.ToString(), "Retry", "End");
-
-				if (doRetry)
-				{
-					game.Initialize(Width, Height);
-					ReStartGame();
-				}
-				else
-				{
-					await Navigation.PopModalAsync();
-				}
-			});
-		}
-
-		private int GetPlayerRank()
-		{
-			var scoreTable = new HighScoreTable();
-			scoreTable.Load();
-
-			if (scoreTable.TryStorePlayerScore(game.Score, out int rank))
-			{
-				scoreTable.Save();
+				game.Initialize(Width, Height);
+				ReStartGame();
 			}
+			else
+			{
+				await Navigation.PopModalAsync();
+			}
+		});
+	}
 
-			return rank;
+	private int GetPlayerRank()
+	{
+		var scoreTable = new HighScoreTable();
+		scoreTable.Load();
+
+		if (scoreTable.TryStorePlayerScore(game.Score, out int rank))
+		{
+			scoreTable.Save();
 		}
+
+		return rank;
+	}
+
+	protected override void OnAppearing()
+	{
+		if (moveTimer != null)
+		{
+			moveTimer.Enabled = true;
+			Console.WriteLine("Resume");
+		}
+	}
+
+	protected override void OnDisappearing()
+	{
+		moveTimer.Enabled = false;
+		Console.WriteLine("Pause");
 	}
 }

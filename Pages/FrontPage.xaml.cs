@@ -2,30 +2,30 @@
 using System.IO;
 using Microsoft.Maui;
 using Microsoft.Maui.Controls;
+using BouncyBall.Game;
 
-namespace BouncyBall
+namespace BouncyBall;
+
+public partial class FrontPage : ContentPage
 {
-	public partial class FrontPage : ContentPage
+	public FrontPage()
 	{
-		public FrontPage()
-		{
-			InitializeComponent();
-			NavigationPage.SetHasNavigationBar(this, false);
-		}
-		
-		private async void Play_Clicked(object sender, EventArgs e)
-		{
-			await Navigation.PushModalAsync(new MainPage(new Game()));
-		}
-		
-		private async void HS_Clicked(object sender, EventArgs e)
-		{
-			await Navigation.PushAsync(new HighScoresPage());
-		}
-		
-		private void Exit_Clicked(object sender, EventArgs e)
-		{
-			Environment.Exit(0);
-		}
+		InitializeComponent();
+		NavigationPage.SetHasNavigationBar(this, false);
+	}
+
+	private async void Play_Clicked(object sender, EventArgs e)
+	{
+		await Navigation.PushModalAsync(new MainPage(new GameLogic()));
+	}
+
+	private async void HS_Clicked(object sender, EventArgs e)
+	{
+		await Navigation.PushAsync(new HighScoresPage());
+	}
+
+	private void Exit_Clicked(object sender, EventArgs e)
+	{
+		Application.Current.Quit();
 	}
 }
