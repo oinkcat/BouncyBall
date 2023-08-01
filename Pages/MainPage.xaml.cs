@@ -52,7 +52,8 @@ public partial class MainPage : ContentPage
 		touchArea.TouchMove += TouchMoved;
 		touchArea.TouchEnd += TouchCompleted;
 
-		ballImage.Source = ImageSource.FromResource("BouncyBall.resources.oink.png");
+        string skin = Settings.Instance.SkinName;
+		ballImage.Source = ImageSource.FromResource($"BouncyBall.resources.{skin}.png");
 		backImage.SetImageByName("BouncyBall.resources.back.png");
 	}
 

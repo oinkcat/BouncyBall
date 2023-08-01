@@ -1,0 +1,36 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+	xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+	xmlns:local="clr-namespace:BouncyBall"
+	xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+	x:Class="BouncyBall.SettingsPage"
+    Title="Settings">
+	<Grid>
+        <VerticalStackLayout Spacing="20"
+                             Padding="15"
+                             VerticalOptions="Center"
+                             HorizontalOptions="Center">
+            <Label FontSize="Medium" HorizontalOptions="Center">
+                Choose skin:
+            </Label>
+            
+            <ListView ItemsSource="{Binding SkinOptions}"
+                      SelectedItem="{Binding SelectedSkin, Mode=TwoWay}">
+                <ListView.ItemTemplate>
+                    <DataTemplate>
+                        <ViewCell>
+                            <HorizontalStackLayout Spacing="15">
+                                <Image Source="{Binding SkinImage}"
+                                       WidthRequest="40"
+                                       HeightRequest="40"
+                                       Margin="4" />
+                                <Label Text="{Binding Description}"
+                                       VerticalOptions="Center" />
+                            </HorizontalStackLayout>             
+                        </ViewCell>
+                    </DataTemplate>
+                </ListView.ItemTemplate>
+            </ListView>
+        </VerticalStackLayout>
+    </Grid>
+</ContentPage>

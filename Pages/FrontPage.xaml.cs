@@ -18,6 +18,11 @@ public partial class FrontPage : ContentPage
 	{
 		await Navigation.PushModalAsync(new MainPage(new GameLogic()));
 	}
+    
+    private async void Settings_Clicked(object sender, EventArgs e)
+    {
+        await Navigation.PushAsync(new SettingsPage());
+    }
 
 	private async void HS_Clicked(object sender, EventArgs e)
 	{
