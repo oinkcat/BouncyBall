@@ -9,9 +9,9 @@ namespace BouncyBall.Game;
 /// </summary>
 public class GameLogic
 {
-	private const int BlockSize = 60;
+	public const int BlockSize = 60;
 
-	private const int BallSize = 30;
+	public const int BallSize = 30;
 
 	private const int BlocksInterval = 150;
 
@@ -19,17 +19,17 @@ public class GameLogic
 
 	private (double, double) bounds;
 
-	private int rowCount;
-
 	private readonly Random rng;
 
 	private int tick;
-
-	private int rowNumber;
-
-	private double topBlockYPos;
+ 
+	private int rowCount;
+ 
+    private double topBlockYPos;
 
 	private readonly HashSet<MovingBlock> movableBlocks;
+    
+    private ObstacleGenerator blocksGenerator;
 
 	private CollisionDetector detector;
 
@@ -65,12 +65,12 @@ public class GameLogic
 		movableBlocks.Clear();
 		Score = 0;
 		BaseLine = 0;
-		topBlockYPos = 0;
-		rowNumber = 0;
+        topBlockYPos = 0;
 
 		bounds = (width, height);
 		rowCount = (int)(height / BlockSize);
 		detector = new CollisionDetector(width);
+        blocksGenerator = new ObstacleGenerator(width);
 
 		GenerateObstacles();
 		Ball.MoveTo(width / 2, height / 2);
@@ -85,75 +85,25 @@ public class GameLogic
 	{
 		for (; topBlockYPos <= bounds.Item2; topBlockYPos += BlocksInterval)
 		{
-			var obstaclesRow = CreateObstacleRow(topBlockYPos);
-			Obstacles.AddRange(obstaclesRow);
+			_ = CreateBlocksRow();
 		}
 
 		topBlockYPos -= BlocksInterval;
 	}
-
-	private List<Entity> CreateObstacleRow(double yPos)
-	{
-		// TODO: Create ObstacleGenerator
-		const int MaxOneSize = 3;
-		const int Margin = BallSize;
-
-		int fullSize = (int)bounds.Item1 / (BlockSize + Margin) + 1;
-		var createdEntities = new List<Entity>();
-		bool hasGap = false;
-		int rowOffset = (++rowNumber % 2 == 0) ? Margin : 0;
-
-		for (int size = 0; size < fullSize;)
-		{
-			int oneSize = rng.Next(1, MaxOneSize);
-
-			if (rng.NextDouble() > 0.4)
-			{
-				double xPos = size * (BlockSize + Margin) + rowOffset;
-				var newEntity = CreateBlock(xPos, yPos, BlockSize * oneSize, BlockSize);
-				createdEntities.Add(newEntity);
-			}
-			else
-			{
-				hasGap = true;
-			}
-
-			size += oneSize;
-		}
-
-		if (!hasGap)
-		{
-			createdEntities.RemoveAt(rng.Next(createdEntities.Count));
-		}
-
-		if ((createdEntities.Count <= 0) ||
-		   (createdEntities.Count == 1 && rng.NextDouble() > 0.5))
-		{
-			double maxX = bounds.Item1 - BlockSize;
-			double xPos = rng.NextDouble() * maxX;
-			var newMoving = new MovingBlock(xPos, yPos, BlockSize);
-			movableBlocks.Add(newMoving);
-			createdEntities.Clear();
-			createdEntities.Add(newMoving);
-		}
-
-		return createdEntities;
-	}
-
-	public Block CreateBlock(double x, double y, double width, double height)
-	{
-		double val = rng.NextDouble();
-
-		if (val < 0.9)
-		{
-			return new Block(x, y, width, height);
-		}
-		else
-		{
-			return new BouncyBlock(x, y, BlockSize);
-		}
-	}
-
+    
+    private List<Entity> CreateBlocksRow()
+    {
+        var obstaclesRow = blocksGenerator.CreateObstacleRow(topBlockYPos, out bool movable);
+		Obstacles.AddRange(obstaclesRow);
+        
+        if(movable)
+        {
+            movableBlocks.Add(obstaclesRow.First() as MovingBlock);
+        }
+        
+        return obstaclesRow;
+    }
+    
 	public void Interact(double dx, double dy)
 	{
 		if (Ball.CanJump)
@@ -194,8 +144,7 @@ public class GameLogic
 		if (topLine - topBlockYPos > BlocksInterval)
 		{
 			topBlockYPos = topLine;
-			var newRow = CreateObstacleRow(topLine);
-			Obstacles.AddRange(newRow);
+			var newRow = CreateBlocksRow();
 
 			foreach (var newBlock in newRow)
 			{
