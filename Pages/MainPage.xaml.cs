@@ -24,12 +24,15 @@ public partial class MainPage : ContentPage
 	private (double, double)? touchCoords;
 
 	private (double, double)? moveCoords;
+    
+    private int randomLevel;
 
 	public MainPage(GameLogic game)
 	{
 		NavigationPage.SetHasNavigationBar(this, false);
 
 		this.game = game;
+        randomLevel = Settings.Instance.RandomnessLevel;
 
 		game.ObjectCreated += HandleNewObject;
 		game.ObjectRemoved += HandleRemovedObject;
@@ -43,7 +46,7 @@ public partial class MainPage : ContentPage
 		{
 			if (!game.IsStarted)
 			{
-				game.Initialize(Width, Height);
+				game.Initialize(Width, Height, randomLevel);
 				Dispatcher.Dispatch(ReStartGame);
 			}
 		};
@@ -203,7 +206,7 @@ public partial class MainPage : ContentPage
 
 			if (doRetry)
 			{
-				game.Initialize(Width, Height);
+				game.Initialize(Width, Height, randomLevel);
 				ReStartGame();
 			}
 			else

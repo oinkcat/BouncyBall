@@ -11,24 +11,49 @@ public class ObstacleGenerator
 {
     
     private const int BlockSize = GameLogic.BlockSize;
+    
+    private const int Margin = GameLogic.BallSize;
             
     private readonly Random rng = new();
     
+    private readonly double width;
+    
+    private readonly int fullSize;
+    
+    private readonly double randomness;
+    
     private int rowNumber = 0;
     
-    private double width;
+    private double yPos;
     
-    public ObstacleGenerator(double width) => this.width = width;
+    private double phi;
+    
+    public ObstacleGenerator(double width, int randomLevel)
+    {
+        this.width = width;
+        randomness = randomLevel / 10.0;
+        fullSize = (int)width / (BlockSize + Margin) + 1;
+        phi = rng.NextDouble() * Math.PI;
+    }
     
     /// <summary>
     /// Create line of obstacles
     /// </summary>
 	public List<Entity> CreateObstacleRow(double yPos, out bool hasMovable)
 	{
-		const int MaxOneSize = 3;
-		const int Margin = GameLogic.BallSize;
+        this.yPos = yPos;
+        
+        double density = (rng.NextDouble() > randomness)
+            ? Math.Abs(Math.Sin(rowNumber / 10.0 + phi))
+            : 0.5;
+            
+        return GenerateObstacles(density, out hasMovable);
+    }
+    
+    private List<Entity> GenerateObstacles(double density, out bool hasMovable)
+    {
+        const int MaxOneSize = 3;
 
-		int fullSize = (int)width / (BlockSize + Margin) + 1;
 		var createdEntities = new List<Entity>();
 		bool hasGap = false;
 		int rowOffset = (++rowNumber % 2 == 0) ? Margin : 0;
@@ -37,7 +62,7 @@ public class ObstacleGenerator
 		{
 			int oneSize = rng.Next(1, MaxOneSize);
 
-			if (rng.NextDouble() > 0.4)
+			if (rng.NextDouble() < density)
 			{
 				double xPos = size * (BlockSize + Margin) + rowOffset;
 				var newEntity = CreateBlock(xPos, yPos, BlockSize * oneSize, BlockSize);
@@ -57,7 +82,7 @@ public class ObstacleGenerator
 		}
 
 		if ((createdEntities.Count <= 0) ||
-		   (createdEntities.Count == 1 && rng.NextDouble() > 0.5))
+		   (createdEntities.Count == 1 && rng.NextDouble() < 0.5))
 		{
 			double maxX = width - BlockSize;
 			double xPos = rng.NextDouble() * maxX;
@@ -74,7 +99,7 @@ public class ObstacleGenerator
 		return createdEntities;
 	}
 
-	public Block CreateBlock(double x, double y, double width, double height)
+	private Block CreateBlock(double x, double y, double width, double height)
 	{
 		double val = rng.NextDouble();
 

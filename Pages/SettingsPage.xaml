@@ -8,10 +8,18 @@
 	<Grid>
         <VerticalStackLayout Spacing="20"
                              Padding="15"
-                             VerticalOptions="Center"
                              HorizontalOptions="Center">
-            <Label FontSize="Medium" HorizontalOptions="Center">
-                Choose skin:
+                             
+            <Label FontSize="Medium">
+                Randomness:
+            </Label>
+            
+            <Slider Minimum="1" 
+                    Maximum="9" 
+                    Value="{Binding Randomness, Mode=TwoWay}" />
+            
+            <Label FontSize="Medium">
+                Player skin:
             </Label>
             
             <ListView ItemsSource="{Binding SkinOptions}"

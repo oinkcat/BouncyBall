@@ -20,6 +20,8 @@ public class GameLogic
 	private (double, double) bounds;
 
 	private readonly Random rng;
+    
+    private int randomLevel;
 
 	private int tick;
  
@@ -59,7 +61,7 @@ public class GameLogic
 		Ball = new PlayerBall(0, BallSize);
 	}
 
-	public void Initialize(double width, double height)
+	public void Initialize(double width, double height, int randomLevel)
 	{
 		Obstacles.Clear();
 		movableBlocks.Clear();
@@ -68,9 +70,10 @@ public class GameLogic
         topBlockYPos = 0;
 
 		bounds = (width, height);
+        this.randomLevel = randomLevel;
 		rowCount = (int)(height / BlockSize);
 		detector = new CollisionDetector(width);
-        blocksGenerator = new ObstacleGenerator(width);
+        blocksGenerator = new ObstacleGenerator(width, randomLevel);
 
 		GenerateObstacles();
 		Ball.MoveTo(width / 2, height / 2);
