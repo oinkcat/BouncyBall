@@ -19,8 +19,6 @@ public partial class MainPage : ContentPage
 
 	private readonly GameLogic game;
 
-	private readonly RecyclingEntitiesPool entitiesPool;
-
 	private (double, double)? touchCoords;
 
 	private (double, double)? moveCoords;
@@ -38,44 +36,29 @@ public partial class MainPage : ContentPage
 		game.ObjectRemoved += HandleRemovedObject;
 		game.GameOver += HandleGameOver;
 
-		entitiesPool = new RecyclingEntitiesPool();
-
 		InitializeComponent();
+        
+        var drawable = new GameDrawable(game);
 
 		this.SizeChanged += (s, e) =>
 		{
 			if (!game.IsStarted)
 			{
 				game.Initialize(Width, Height, randomLevel);
+                drawable.Initialize(Width, Height, Settings.Instance.SkinName);
 				Dispatcher.Dispatch(ReStartGame);
 			}
 		};
+        
+        GameGraphics.Drawable = drawable;
 
 		touchArea.TouchStart += TouchStarted;
 		touchArea.TouchMove += TouchMoved;
 		touchArea.TouchEnd += TouchCompleted;
-
-        string skin = Settings.Instance.SkinName;
-		ballImage.Source = ImageSource.FromResource($"BouncyBall.resources.{skin}.png");
-		backImage.SetImageByName("BouncyBall.resources.back.png");
 	}
 
 	private void ReStartGame()
 	{
-		entitiesPool.Reset();
-
-		var blocksToRemove = layout.Children
-			.OfType<Frame>()
-
-			.Where(b => b != ball)
-			.ToArray();
-
-		foreach (var view in blocksToRemove)
-		{
-			layout.Remove(view);
-		}
-
-		SpawnBlocks(game.Obstacles);
 		StartBall();
 	}
 
@@ -104,13 +87,12 @@ public partial class MainPage : ContentPage
 
 	private void HandleNewObject(object sender, Entity newObject)
 	{
-		entitiesPool.EntityAdded(newObject);
+        
 	}
 
 	private void HandleRemovedObject(object sender, Entity removedObject)
 	{
-		Dispatcher.Dispatch(() => entitiesPool.GetFrame(removedObject).IsVisible = false);
-		entitiesPool.EntityRemoved(removedObject);
+		
 	}
 
 	private void StartBall()
@@ -125,66 +107,8 @@ public partial class MainPage : ContentPage
 	private void UpdateState(object sender, EventArgs e)
 	{
 		game.Update();
-		Dispatcher.Dispatch(() =>
-		{
-			MoveObjects();
-			entitiesPool.HandleBlocks(SpawnBlocks, frame => layout.Remove(frame));
-			DisplayInfo();
-		});
-	}
-
-	private void SpawnBlocks(IEnumerable<Entity> blocks)
-	{
-		foreach (var newBlock in blocks)
-		{
-			var blockFrame = entitiesPool.CreateOrRecycleFrame(newBlock, out bool old);
-
-			if (old)
-			{
-				blockFrame.IsVisible = true;
-			}
-			else
-			{
-				layout.Insert(layout.Count, blockFrame);
-			}
-
-			PlaceBlock(newBlock, blockFrame);
-		}
-	}
-
-	private void PlaceBlock(Entity block, Frame frame)
-	{
-		double blockY = Height - block.Y - block.Height;
-		AbsoluteLayout.SetLayoutBounds(frame, new Rect
-		{
-			X = block.X,
-			Y = blockY + game.BaseLine,
-			Width = block.Width,
-			Height = block.Height
-		});
-		frame.ZIndex = -10;
-	}
-
-	private void MoveObjects()
-	{
-		if (game.BaseLine > 10)
-		{
-			backImage.Offset = game.BaseLine / 2;
-		}
-
-		foreach (var (block, frame) in entitiesPool.GetAllEntities())
-		{
-			PlaceBlock(block, frame);
-		}
-
-		PlaceBlock(game.Ball, ball);
-	}
-
-	private void DisplayInfo()
-	{
-		ScoreLabel.Text = game.Score.ToString().PadLeft(5, '0');
-		leftLabel.Text = game.Ball.JumpsLeft.ToString();
-	}
+		GameGraphics.Invalidate();
+    }
 
 	private void HandleGameOver(object sender, EventArgs e)
 	{

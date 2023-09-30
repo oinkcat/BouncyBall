@@ -47,6 +47,8 @@ public class ObstacleGenerator
             ? Math.Abs(Math.Sin(rowNumber / 10.0 + phi))
             : 0.5;
             
+        density = (density < 0.1) ? 0.1 : density;
+            
         return GenerateObstacles(density, out hasMovable);
     }
     
