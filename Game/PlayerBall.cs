@@ -16,12 +16,16 @@ public class PlayerBall : Entity
     public bool CanJump => JumpsLeft > 0;
 
     public Block Stand { get; set; }
+    
+    public bool BounceFloor { get; set; }
 
     public PlayerBall(double x, double y)
         : base(x, y, (double)Size, (double)Size) { }
 
     public override void Update()
     {
+        const double FloorBounceVelocityThreshold = -2.0;
+        
         if (Bump != null)
         {
             if (Bump.Block != null)
@@ -38,7 +42,7 @@ public class PlayerBall : Entity
 
             if (Bump.IsSide)
             {
-                Accelerate(-Velocity.X * 2, 0.0);
+                Accelerate(-Velocity.X * 1.9, 0.0);
             }
             else if (Bump.Side == CollisionSide.Bottom)
             {
@@ -46,10 +50,18 @@ public class PlayerBall : Entity
             }
             else if (Bump.Side == CollisionSide.Top)
             {
-                Stand = Bump.Block as Block;
-                Stand.StandingBall = this;
-                Stop();
-                ResetJumps();
+                if(!BounceFloor || (Velocity.Y >= FloorBounceVelocityThreshold))
+                {
+                    Stand = Bump.Block as Block;    
+                    Stand.StandingBall = this;  
+                    Stop();
+                    ResetJumps();
+                }
+                else
+                {
+                    var blockVelocity = Bump.Block.Velocity.X;
+                    Accelerate(blockVelocity * 0.9, -Velocity.Y * 1.5);
+                }
             }
         }
     }

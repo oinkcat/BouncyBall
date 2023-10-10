@@ -40,15 +40,17 @@ public partial class MainPage : ContentPage
         
         var drawable = new GameDrawable(game);
 
-		this.SizeChanged += (s, e) =>
+		SizeChanged += (s, e) =>
 		{
 			if (!game.IsStarted)
 			{
-				game.Initialize(Width, Height, randomLevel);
+				game.Initialize(Width, Height);
                 drawable.Initialize(Width, Height, Settings.Instance.SkinName);
 				Dispatcher.Dispatch(ReStartGame);
 			}
 		};
+        
+        Unloaded += (s, e) => moveTimer.Stop();
         
         GameGraphics.Drawable = drawable;
 
@@ -130,7 +132,7 @@ public partial class MainPage : ContentPage
 
 			if (doRetry)
 			{
-				game.Initialize(Width, Height, randomLevel);
+				game.Initialize(Width, Height);
 				ReStartGame();
 			}
 			else

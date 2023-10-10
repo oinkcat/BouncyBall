@@ -61,7 +61,7 @@ public class GameLogic
 		Ball = new PlayerBall(0, BallSize);
 	}
 
-	public void Initialize(double width, double height, int randomLevel)
+	public void Initialize(double width, double height)
 	{
 		Obstacles.Clear();
 		movableBlocks.Clear();
@@ -70,12 +70,13 @@ public class GameLogic
         topBlockYPos = 0;
 
 		bounds = (width, height);
-        this.randomLevel = randomLevel;
+        this.randomLevel = Settings.Instance.RandomnessLevel;
 		rowCount = (int)(height / BlockSize);
 		detector = new CollisionDetector(width);
         blocksGenerator = new ObstacleGenerator(width, randomLevel);
 
 		GenerateObstacles();
+        Ball.BounceFloor = Settings.Instance.ExtraBouncy;
 		Ball.MoveTo(width / 2, height / 2);
 		Ball.Stop();
 		Ball.ResetJumps();
@@ -182,8 +183,7 @@ public class GameLogic
 	{
 		if (Stand == null)
 		{
-			double friction = -Math.Sign(Ball.Velocity.X) * 0.2;
-			Ball.Accelerate(friction, -1.0);
+			Ball.ApplyFriction();
 		}
 		else if (!Ball.Jumping)
 		{

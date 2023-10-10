@@ -39,6 +39,13 @@
                     </DataTemplate>
                 </ListView.ItemTemplate>
             </ListView>
+            
+            <HorizontalStackLayout>
+                <CheckBox IsChecked="{Binding Extra}"/>
+                <Label FontSize="Medium">
+                    Extra bouncy
+                </Label>
+            </HorizontalStackLayout>
         </VerticalStackLayout>
     </Grid>
 </ContentPage>

@@ -9,7 +9,9 @@ namespace BouncyBall.Game;
 /// </summary>
 public abstract class Entity
 {
-	private const float MaxVelocity = 10;
+    private const float MinHorizontalVelocity = 0.5f;
+    
+	private const float MaxVelocity = 10.0f;
 
 	public Collision Bump { get; set; }
 
@@ -73,6 +75,15 @@ public abstract class Entity
 		float vy = Math.Clamp(newVelocity.Y, -MaxVelocity, MaxVelocity * 2);
 		Velocity = new Vector2(vx, vy);
 	}
+    
+    public void ApplyFriction()
+    {
+        double friction = (Math.Abs(Velocity.X) > MinHorizontalVelocity)
+                ? -Math.Sign(Velocity.X) * 0.2
+                : 0.0;
+                
+		Accelerate(friction, -1.0);
+    }
 
 	public void Move()
 	{

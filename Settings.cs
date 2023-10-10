@@ -14,6 +14,8 @@ public class Settings
     
     private const string RandomnessKey = "randomness";
     
+    private const string ExtraBouncyKey = "extra_bouncy";
+    
     private const string DefaultSkinName = "ball";
     
     private const int DefaultRandomness = 5;
@@ -24,6 +26,8 @@ public class Settings
     
     public int RandomnessLevel { get; set; }
     
+    public bool ExtraBouncy { get; set; }
+    
     static Settings()
     {
         Instance = new Settings();
@@ -33,6 +37,7 @@ public class Settings
     {
         SkinName = Preferences.Get(SkinSettingKey, DefaultSkinName);
         RandomnessLevel = Preferences.Get(RandomnessKey, DefaultRandomness);
+        ExtraBouncy = Preferences.Get(ExtraBouncyKey, false);
     }
     
     public void Save()
@@ -40,5 +45,6 @@ public class Settings
         string skinNameToSave = SkinName ?? DefaultSkinName;
         Preferences.Set(SkinSettingKey, skinNameToSave);
         Preferences.Set(RandomnessKey, RandomnessLevel);
+        Preferences.Set(ExtraBouncyKey, ExtraBouncy);
     }
 }

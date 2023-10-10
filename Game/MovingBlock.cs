@@ -20,8 +20,8 @@ public class MovingBlock : Block
 	{
 		if (Bump?.IsSide ?? false)
 		{
-			MoveBy(-Velocity.X, 0.0);
-			Accelerate(-Velocity.X * 2, 0.0);
+			MoveBy(-Velocity.X * 2, 0.0);
+			Accelerate(-Velocity.X * 2.0, 0.0);
 		}
 	}
 }

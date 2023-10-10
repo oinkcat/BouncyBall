@@ -9,10 +9,13 @@ namespace BouncyBall.Game;
 /// </summary>
 public class ObstacleGenerator 
 {
-    
     private const int BlockSize = GameLogic.BlockSize;
     
     private const int Margin = GameLogic.BallSize;
+    
+    private const int NumInitialRows = 3;
+    
+    private const double InitialRowsDensity = 0.99;
             
     private readonly Random rng = new();
     
@@ -43,11 +46,20 @@ public class ObstacleGenerator
 	{
         this.yPos = yPos;
         
-        double density = (rng.NextDouble() > randomness)
-            ? Math.Abs(Math.Sin(rowNumber / 10.0 + phi))
-            : 0.5;
+        double density;
+        
+        if(rowNumber > NumInitialRows)
+        {
+            density = (rng.NextDouble() > randomness)
+                ? Math.Abs(Math.Sin(rowNumber / 10.0 + phi))
+                : 0.5;
             
-        density = (density < 0.1) ? 0.1 : density;
+            density = (density < 0.1) ? 0.1 : density;
+        }
+        else
+        {
+            density = InitialRowsDensity;
+        }
             
         return GenerateObstacles(density, out hasMovable);
     }

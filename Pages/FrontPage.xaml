@@ -7,7 +7,7 @@
 	<StackLayout HorizontalOptions="Center" VerticalOptions="Center">
 		<Label FontSize="24" Margin="10">Bouncy Ball</Label>
 		
-		<Button Text="Play" Clicked="Play_Clicked" />
+		<Button Text="Play" BackgroundColor="Cyan" Clicked="Play_Clicked" />
         <Button Text="Settings" Clicked="Settings_Clicked" />
 		<Button Text="High Scores" Clicked="HS_Clicked" />
 		<Button Text="Exit" Clicked="Exit_Clicked" />
