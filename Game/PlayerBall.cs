@@ -50,17 +50,19 @@ public class PlayerBall : Entity
             }
             else if (Bump.Side == CollisionSide.Top)
             {
-                if(!BounceFloor || (Velocity.Y >= FloorBounceVelocityThreshold))
+                if(BounceFloor &&
+                   (Velocity.Y < FloorBounceVelocityThreshold) &&
+                   (Bump.Block is not BouncyBlock))
+                {
+                    var blockVelocity = Bump.Block.Velocity.X;
+                    Accelerate(blockVelocity * 0.9, -Velocity.Y * 1.5);
+                }
+                else
                 {
                     Stand = Bump.Block as Block;    
                     Stand.StandingBall = this;  
                     Stop();
                     ResetJumps();
-                }
-                else
-                {
-                    var blockVelocity = Bump.Block.Velocity.X;
-                    Accelerate(blockVelocity * 0.9, -Velocity.Y * 1.5);
                 }
             }
         }

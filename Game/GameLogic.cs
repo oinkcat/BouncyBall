@@ -123,10 +123,11 @@ public class GameLogic
 		tick++;
 
 		RaiseBaseLine();
-		MoveObstacles();
+		HandleObstacles();
 		MoveBall();
 
 		HandleCollisions();
+        CleanupEntities();
 	}
 
 	private void RaiseBaseLine()
@@ -157,25 +158,11 @@ public class GameLogic
 		}
 	}
 
-	private void MoveObstacles()
+	private void HandleObstacles()
 	{
 		foreach (var movingBlock in movableBlocks)
 		{
 			movingBlock.Move();
-		}
-
-		foreach (var block in Obstacles)
-		{
-			if (block.Y + block.Height < BaseLine)
-			{
-				Obstacles.Remove(block);
-				if (block is MovingBlock movable)
-				{
-					movableBlocks.Remove(movable);
-				}
-
-				ObjectRemoved?.Invoke(this, block);
-			}
 		}
 	}
 
@@ -224,4 +211,32 @@ public class GameLogic
 			GameOver?.Invoke(this, EventArgs.Empty);
 		}
 	}
+    
+    private void CleanupEntities()
+    {
+        var entitiesToRemove = new List<Entity>();
+
+		foreach (var block in Obstacles)
+		{
+			if (block.Y + block.Height < BaseLine)
+			{
+				entitiesToRemove.Add(block);
+				if (block is MovingBlock movable)
+				{
+					movableBlocks.Remove(movable);
+				}
+			}
+            else if(block is CollapsingBlock cb && cb.IsCollaped)
+            {    
+                entitiesToRemove.Add(block);
+                Ball.Stand = null;
+            }
+		}
+        
+        foreach(var entity in entitiesToRemove)
+        {
+            Obstacles.Remove(entity);
+            ObjectRemoved?.Invoke(this, entity);
+        }
+    }
 }

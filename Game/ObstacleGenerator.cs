@@ -117,10 +117,14 @@ public class ObstacleGenerator
 	{
 		double val = rng.NextDouble();
 
-		if (val < 0.9)
+		if (val < 0.7)
 		{
 			return new Block(x, y, width, height);
 		}
+        else if(val < 0.9)
+        {
+            return new CollapsingBlock(x, y, BlockSize);
+        }
 		else
 		{
 			return new BouncyBlock(x, y, BlockSize);

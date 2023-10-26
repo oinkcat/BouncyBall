@@ -63,6 +63,9 @@ public abstract class Entity
 			CollisionSide.Bottom => (float)another.Y - Height,
 			_ => Position.Y
 		};
+        
+        double dx = Math.Abs(X - newX);
+        newX = (dx < another.Width) ? newX : (float)X;
 
 		Position = new Vector2(newX, newY);
 	}

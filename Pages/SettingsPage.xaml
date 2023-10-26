@@ -41,8 +41,8 @@
             </ListView>
             
             <HorizontalStackLayout>
-                <CheckBox IsChecked="{Binding Extra}"/>
-                <Label FontSize="Medium">
+                <Switch IsToggled="{Binding Extra}"/>
+                <Label FontSize="Medium" VerticalOptions="Center">
                     Extra bouncy
                 </Label>
             </HorizontalStackLayout>

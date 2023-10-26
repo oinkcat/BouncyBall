@@ -15,6 +15,9 @@
     <EmbeddedResource Include="resources/brick1.png" />
     <EmbeddedResource Include="resources/brick2.png" />
     <EmbeddedResource Include="resources/brick3.png" />
+    <EmbeddedResource Include="resources/brick4.png" />
+    <EmbeddedResource Include="resources/brick5.png" />
+    <EmbeddedResource Include="resources/brick6.png" />
     <EmbeddedResource Include="resources/oink.png" />
     <EmbeddedResource Include="resources/back.png" />
     <EmbeddedResource Update="Pages/FrontPage.xaml">
