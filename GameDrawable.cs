@@ -13,7 +13,7 @@ namespace BouncyBall;
 /// </summary>
 public class GameDrawable : IDrawable
 {
-    private const int BlockTexturesCount = 6;
+    private const int BlockTexturesCount = 7;
         
     private readonly GameLogic game;
     
@@ -81,17 +81,29 @@ public class GameDrawable : IDrawable
     
     private void DrawBlocks(ICanvas canvas)
     {
-        const int CollapsingTextureIndex = 3;
+        const int CollapsingTextureIndex = 4;
         
         foreach(var entity in game.Obstacles.ToArray())
         {
             float x = (float)entity.X;
             float y = ConvertEntityYCoord(entity);
+            
+            if(entity is MovingBlock)
+            {
+                float ly = y + entity.Height / 2;
+                canvas.StrokeColor = Colors.DarkGray;
+                canvas.DrawLine(0, ly, width, ly);
+                canvas.StrokeColor = Colors.Gray;
+                canvas.DrawLine(0, ly + 1, width, ly + 1);
+            }
+            
             var texture = entity switch
 			{
-				MovingBlock => blockTextures[1],
-				BouncyBlock => blockTextures[2],
-                CollapsingBlock b => blockTextures[CollapsingTextureIndex + b.Phase],
+				MovingBlock mb => (mb.Velocity.X < 0)
+                                        ? blockTextures[1]
+                                        : blockTextures[2],
+				BouncyBlock => blockTextures[3],
+                CollapsingBlock cb => blockTextures[CollapsingTextureIndex + cb.Phase],
 				_ => blockTextures[0]
 			};
             canvas.DrawImage(texture, x, y, entity.Width, entity.Height);

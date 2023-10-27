@@ -11,6 +11,8 @@ public partial class FrontPage : ContentPage
 	public FrontPage()
 	{
 		InitializeComponent();
+        backImage.Source = ImageSource.FromResource("BouncyBall.resources.back.png");
+        
 		NavigationPage.SetHasNavigationBar(this, false);
 	}
 
