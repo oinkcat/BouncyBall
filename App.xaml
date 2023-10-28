@@ -1,7 +1,21 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Application xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
 	xmlns:local="clr-namespace:BouncyBall"
 	xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
 	x:Class="BouncyBall.App">
-		
+    
+    <Application.Resources>
+        <Style TargetType="Button">
+            <Setter Property="BackgroundColor" Value="LightYellow" />
+            <Setter Property="TextColor" Value="Black" />
+        </Style>
+        
+        <Style TargetType="Label">
+            <Setter Property="TextColor" Value="LightGray" />
+        </Style>
+        
+        <Style TargetType="ContentPage" ApplyToDerivedTypes="True">
+            <Setter Property="BackgroundColor" Value="#222222" />
+        </Style>
+    </Application.Resources>
 </Application>

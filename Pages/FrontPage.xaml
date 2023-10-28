@@ -4,11 +4,6 @@
 	xmlns:local="clr-namespace:BouncyBall"
 	xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
 	x:Class="BouncyBall.FrontPage">
-    <ContentPage.Resources>
-        <Style TargetType="Button">
-            <Setter Property="BackgroundColor" Value="LightYellow" />
-        </Style>
-    </ContentPage.Resources>
     
     <Grid>
         <Image x:Name="backImage" Aspect="AspectFill" />
@@ -18,7 +13,7 @@
                HorizontalOptions="Center"
                VerticalOptions="Center"
                CornerRadius="8">
-	        <StackLayout>
+	        <VerticalStackLayout Spacing="4">
 	    	    <Label FontSize="28" Margin="10" TextColor="#ff4433">
                     Bouncy Ball
                 </Label>
@@ -27,7 +22,7 @@
                 <Button Text="Settings" Clicked="Settings_Clicked" />
 	    	    <Button Text="High Scores" Clicked="HS_Clicked" />
 		        <Button Text="Exit" Clicked="Exit_Clicked" />
-    	    </StackLayout>
+    	    </VerticalStackLayout>
         </Frame>
     </Grid>
 </ContentPage>
