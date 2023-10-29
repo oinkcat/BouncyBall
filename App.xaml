@@ -15,7 +15,7 @@
         </Style>
         
         <Style TargetType="ContentPage" ApplyToDerivedTypes="True">
-            <Setter Property="BackgroundColor" Value="#222222" />
+            <Setter Property="BackgroundColor" Value="#333333" />
         </Style>
     </Application.Resources>
 </Application>

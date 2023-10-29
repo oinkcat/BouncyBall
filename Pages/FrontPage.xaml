@@ -13,7 +13,7 @@
                HorizontalOptions="Center"
                VerticalOptions="Center"
                CornerRadius="8">
-	        <VerticalStackLayout Spacing="4">
+	        <VerticalStackLayout Spacing="10">
 	    	    <Label FontSize="28" Margin="10" TextColor="#ff4433">
                     Bouncy Ball
                 </Label>
@@ -24,5 +24,9 @@
 		        <Button Text="Exit" Clicked="Exit_Clicked" />
     	    </VerticalStackLayout>
         </Frame>
+        
+        <Label TextColor="LightGray" HorizontalOptions="Center" VerticalOptions="End">
+            SoftCat, 2023
+        </Label>
     </Grid>
 </ContentPage>
