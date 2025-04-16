@@ -8,6 +8,10 @@
                           HorizontalOptions="Fill"
                           VerticalOptions="Fill" />
 				   
-			<local:TouchView x:Name="touchArea" ZIndex="10" />
+			<local:TouchView x:Name="touchArea" ZIndex="10">
+                <local:TouchView.Behaviors>
+                    <local:TouchBehavior />
+                </local:TouchView.Behaviors>
+            </local:TouchView>
 		</Grid>
 </ContentPage>

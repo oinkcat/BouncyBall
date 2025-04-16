@@ -52,4 +52,7 @@
   <PropertyGroup>
     <SingleProject>true</SingleProject>
   </PropertyGroup>
+  <PropertyGroup>
+    <ImplicitUsings>disable</ImplicitUsings>
+  </PropertyGroup>
 </Project>

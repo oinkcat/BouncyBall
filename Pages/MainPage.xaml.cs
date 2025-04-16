@@ -31,9 +31,6 @@ public partial class MainPage : ContentPage
 
 		this.game = game;
         randomLevel = Settings.Instance.RandomnessLevel;
-
-		game.ObjectCreated += HandleNewObject;
-		game.ObjectRemoved += HandleRemovedObject;
 		game.GameOver += HandleGameOver;
 
 		InitializeComponent();
@@ -85,16 +82,6 @@ public partial class MainPage : ContentPage
 			game.Interact(tx - mx, ty - my);
 			touchCoords = null;
 		}
-	}
-
-	private void HandleNewObject(object sender, Entity newObject)
-	{
-        
-	}
-
-	private void HandleRemovedObject(object sender, Entity removedObject)
-	{
-		
 	}
 
 	private void StartBall()
